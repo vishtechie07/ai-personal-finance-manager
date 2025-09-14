@@ -1,0 +1,36 @@
+spring:
+  application:
+    name: personal-finance-manager
+  
+  datasource:
+    url: jdbc:h2:mem:financedb
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: password
+  
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+  
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
+        format_sql: false
+
+# Server Configuration
+server:
+  port: 8080
+  servlet:
+    context-path: /api
+
+# Logging - Minimal for better performance
+logging:
+  level:
+    com.finance.manager: INFO
+    org.springframework: WARN
+    org.hibernate: WARN
