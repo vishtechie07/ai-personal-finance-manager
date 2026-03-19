@@ -5,7 +5,7 @@ A comprehensive personal finance management application built with Spring Boot (
 ## Features
 
 ### Core Functionality
-- **User Authentication**: Secure login and registration system with JWT tokens
+- **User Authentication**: Secure login and registration system with token validation (demo token flow)
 - **Transaction Management**: Add, view, update, and delete financial transactions
 - **Budget Management**: Create and monitor budgets for various spending categories
 - **Data Visualization**: Interactive charts and graphs for financial insights
@@ -19,7 +19,7 @@ A comprehensive personal finance management application built with Spring Boot (
 
 ### Backend
 - **Java 17** with **Spring Boot 3.2.0**
-- **Spring Security** with JWT authentication
+- Token validation (demo token flow)
 - **Spring Data JPA** with **Hibernate**
 - **H2 Database** (development) / **PostgreSQL** (production ready)
 - **Maven** for dependency management
@@ -47,13 +47,13 @@ A comprehensive personal finance management application built with Spring Boot (
    cd backend
    ```
 
-2. **Set environment variables:**
+2. **Set environment variables (local):**
    ```bash
    # Windows
-   set JWT_SECRET=your_super_secret_jwt_key_here
+   set SPRING_PROFILES_ACTIVE=local
    
    # Linux/Mac
-   export JWT_SECRET=your_super_secret_jwt_key_here
+   export SPRING_PROFILES_ACTIVE=local
    ```
 
 3. **Build and run the application:**
@@ -64,7 +64,7 @@ A comprehensive personal finance management application built with Spring Boot (
 
 4. **Access the application:**
    - API: http://localhost:8080/api
-   - H2 Console: http://localhost:8080/h2-console
+   - H2 Console: http://localhost:8080/api/h2-console
    - Database URL: `jdbc:h2:mem:financedb`
    - Username: `sa`
    - Password: `password`
@@ -100,6 +100,15 @@ A comprehensive personal finance management application built with Spring Boot (
 
 2. **The built files will be in `frontend/dist/`**
 
+### Deploy on Railway (Docker + Postgres)
+1. Deploy using the repository root `Dockerfile` (it serves the Vue app with Nginx and proxies `/api/*` to the Spring Boot backend).
+2. Set:
+   - `SPRING_PROFILES_ACTIVE=railway`
+   - Postgres connection variables provided by Railway (commonly `DATABASE_URL` and credentials like `DATABASE_USERNAME` / `DATABASE_PASSWORD`).
+3. Result:
+   - Frontend UI served at `/`
+   - Backend API under `/api` (for example: `/api/auth/login`, `/api/auth/register`)
+
 ## API Endpoints
 
 ### Authentication
@@ -133,7 +142,9 @@ personal-finance-manager/
 │   │   ├── repository/     # Data access layer
 │   │   └── service/        # Business logic
 │   └── src/main/resources/
-│       └── application.yml
+│       ├── application.yml
+│       ├── application-local.yml
+│       └── application-railway.yml
 ├── frontend/
 │   ├── src/
 │   │   ├── assets/         # Static assets
@@ -151,7 +162,6 @@ personal-finance-manager/
 ### Backend Development
 - The application uses H2 in-memory database for development
 - JPA DDL is set to `create-drop` for easy development
-- Spring Security is configured with JWT authentication
 - Smart categorization uses keyword-based pattern matching
 
 ### Frontend Development
