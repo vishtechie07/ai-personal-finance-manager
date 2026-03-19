@@ -21,6 +21,11 @@
             <router-link to="/insights" class="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200 cursor-pointer border border-transparent hover:border-blue-200" style="pointer-events: auto; z-index: 10; background: white; padding: 8px 12px; border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">Financial Insights</router-link>
 
             <button v-if="!isAuthenticated" @click="showLoginModal = true" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">Login</button>
+            <router-link
+              v-if="!isAuthenticated"
+              to="/register"
+              class="bg-gray-200 hover:bg-gray-300 text-gray-900 font-medium py-2 px-4 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
+            >Register</router-link>
             
             <!-- User info and logout when authenticated -->
             <div v-else class="flex items-center space-x-3">

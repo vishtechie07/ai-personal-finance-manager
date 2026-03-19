@@ -3,6 +3,7 @@ package com.finance.manager;
 import com.finance.manager.model.User;
 import com.finance.manager.model.Transaction;
 import com.finance.manager.model.Budget;
+import com.finance.manager.repository.UserRepository;
 import com.finance.manager.repository.TransactionRepository;
 import com.finance.manager.repository.BudgetRepository;
 import org.springframework.boot.CommandLineRunner;
@@ -38,7 +39,6 @@ public class PersonalFinanceManagerApplication {
         
         for (int i = 0; i < 5; i++) {
             User user = new User();
-            user.setId((long) (i + 1));
             user.setUsername(usernames[i]);
             user.setEmail(emails[i]);
             user.setPassword(passwords[i]); // Plain text for demo
@@ -51,6 +51,21 @@ public class PersonalFinanceManagerApplication {
         
         System.out.println("Default users created successfully!");
         return users;
+    }
+
+    @Bean
+    public CommandLineRunner initializeUsers(UserRepository userRepository, Map<String, User> defaultUsers) {
+        return args -> {
+            System.out.println("Initializing default users...");
+
+            // Seed only once (or only when DB is empty).
+            if (userRepository.count() == 0) {
+                System.out.println("Seeding users into the database...");
+                defaultUsers.values().forEach(userRepository::save);
+            }
+
+            System.out.println("User initialization completed!");
+        };
     }
 
     @Bean

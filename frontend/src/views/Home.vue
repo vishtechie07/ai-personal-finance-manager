@@ -7,10 +7,10 @@
           Smart-Powered
           <span class="text-blue-600">Personal Finance Management</span>
         </h1>
-        <p class="text-xl text-gray-600 mb-8 max-w-3xl">
+        <p class="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
           Our smart technology learns your spending patterns and provides personalized insights
         </p>
-        <div class="flex flex-col sm:flex-row gap-4 justify-center">
+        <div class="flex flex-col sm:flex-row gap-4 justify-center items-center">
           <button @click="getStarted" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-4 px-8 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 text-lg">
             Get Started Free
           </button>
@@ -128,8 +128,7 @@ export default {
       if (authStore.isAuthenticated) {
         router.push('/dashboard')
       } else {
-        // Show login modal or redirect to login
-        router.push('/dashboard')
+        router.push('/register')
       }
     }
 
