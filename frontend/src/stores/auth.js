@@ -4,7 +4,7 @@ import axios from 'axios'
 
 // Configure axios defaults
 axios.defaults.timeout = 10000
-axios.defaults.baseURL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api'
+axios.defaults.baseURL = import.meta.env.VITE_API_URL || '/api'
 
 // Add response interceptor for better error handling
 axios.interceptors.response.use(

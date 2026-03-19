@@ -81,7 +81,7 @@ export const useBudgetsStore = defineStore('budgets', () => {
     isLoading.value = true
     error.value = null
     try {
-      const response = await axios.get('/api/budgets')
+      const response = await axios.get('/budgets')
       
       if (response.data && Array.isArray(response.data)) {
         budgets.value = response.data
@@ -119,7 +119,7 @@ export const useBudgetsStore = defineStore('budgets', () => {
       }
       
       try {
-        const response = await axios.post('/api/budgets', budgetToAdd)
+        const response = await axios.post('/budgets', budgetToAdd)
         
         if (response.data) {
           budgets.value.unshift(response.data)

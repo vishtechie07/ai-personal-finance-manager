@@ -67,7 +67,7 @@ export const useTransactionsStore = defineStore('transactions', () => {
     isLoading.value = true
     error.value = null
     try {
-      const response = await axios.get('/api/transactions')
+      const response = await axios.get('/transactions')
       
       if (response.data && Array.isArray(response.data)) {
         transactions.value = response.data
@@ -101,7 +101,7 @@ export const useTransactionsStore = defineStore('transactions', () => {
       }
       
       try {
-        const response = await axios.post('/api/transactions', transactionToAdd)
+        const response = await axios.post('/transactions', transactionToAdd)
         
         if (response.data) {
           transactions.value.unshift(response.data)
