@@ -3,10 +3,10 @@
     <!-- Page Header -->
     <div class="flex justify-between items-center">
       <div>
-        <h1 class="text-3xl font-bold text-gray-900">Budgets</h1>
-        <p class="text-gray-600 mt-2">Manage your spending budgets</p>
+        <h1 class="text-3xl font-bold text-white">Budgets</h1>
+        <p class="text-slate-400 mt-2">Manage your spending budgets</p>
       </div>
-      <button @click="showAddBudget = true" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+      <button @click="showAddBudget = true" class="btn-primary">
         <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path>
         </svg>
@@ -15,20 +15,20 @@
     </div>
 
     <!-- Month Selector -->
-    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
+    <div class="glass-card p-4">
       <div class="flex items-center justify-between">
-        <h3 class="text-lg font-semibold text-gray-900">Filter by Month</h3>
+        <h3 class="text-lg font-semibold text-white">Filter by Month</h3>
         <div class="flex items-center space-x-3">
           <button @click="previousMonth" class="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-            <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
             </svg>
           </button>
-          <span class="text-lg font-medium text-gray-900 min-w-[120px] text-center">
+          <span class="text-lg font-medium text-white min-w-[120px] text-center">
             {{ currentMonthDisplay }}
           </span>
           <button @click="nextMonth" class="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-            <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
             </svg>
           </button>
@@ -40,15 +40,15 @@
     </div>
 
     <!-- Budgets Grid -->
-    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+    <div class="glass-card p-6">
       <div class="flex justify-between items-center mb-4">
-        <h3 class="text-lg font-semibold text-gray-900">Budgets for {{ currentMonthDisplay }}</h3>
-        <div class="text-sm text-gray-500">
+        <h3 class="text-lg font-semibold text-white">Budgets for {{ currentMonthDisplay }}</h3>
+        <div class="text-sm text-slate-500">
           {{ filteredBudgets.length }} budget{{ filteredBudgets.length !== 1 ? 's' : '' }}
         </div>
       </div>
       
-      <div v-if="filteredBudgets.length === 0" class="text-center py-8 text-gray-500">
+      <div v-if="filteredBudgets.length === 0" class="text-center py-8 text-slate-500">
         <svg class="w-12 h-12 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
         </svg>
@@ -56,9 +56,9 @@
       </div>
       
       <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <div v-for="budget in filteredBudgets" :key="budget.id" class="bg-gray-50 rounded-xl border border-gray-200 p-6">
+        <div v-for="budget in filteredBudgets" :key="budget.id" class="bg-dark-800/50 rounded-xl border border-gray-200 p-6">
           <div class="flex items-center justify-between mb-4">
-            <h3 class="text-lg font-semibold text-gray-900">{{ budget.name }}</h3>
+            <h3 class="text-lg font-semibold text-white">{{ budget.name }}</h3>
             <div class="flex items-center space-x-2">
               <span class="px-2 py-1 text-xs font-medium rounded-full" 
                     :class="getStatusClass(budget)">
@@ -69,15 +69,15 @@
           
           <div class="space-y-3">
             <div class="flex justify-between text-sm">
-              <span class="text-gray-600">Amount:</span>
+              <span class="text-slate-400">Amount:</span>
               <span class="font-medium">${{ budget.amount.toFixed(2) }}</span>
             </div>
             <div class="flex justify-between text-sm">
-              <span class="text-gray-600">Spent:</span>
+              <span class="text-slate-400">Spent:</span>
               <span class="font-medium">${{ budget.spentAmount.toFixed(2) }}</span>
             </div>
             <div class="flex justify-between text-sm">
-              <span class="text-gray-600">Remaining:</span>
+              <span class="text-slate-400">Remaining:</span>
               <span class="font-medium" :class="budget.remainingAmount < 0 ? 'text-red-600' : 'text-green-600'">
                 ${{ budget.remainingAmount.toFixed(2) }}
               </span>
@@ -91,13 +91,13 @@
               </div>
             </div>
             
-            <div class="text-xs text-gray-500 text-center">
+            <div class="text-xs text-slate-500 text-center">
               {{ getProgressPercentage(budget).toFixed(1) }}% used
             </div>
           </div>
           
           <div class="mt-4 pt-4 border-t border-gray-200">
-            <div class="flex justify-between text-xs text-gray-500">
+            <div class="flex justify-between text-xs text-slate-500">
               <span>{{ budget.category }}</span>
               <span>{{ budget.period }}</span>
             </div>
@@ -113,7 +113,7 @@
     <div v-if="showAddBudget" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
       <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
         <div class="mt-3">
-          <h3 class="text-lg font-medium text-gray-900 mb-4">Create New Budget</h3>
+          <h3 class="text-lg font-medium text-white mb-4">Create New Budget</h3>
           <form @submit.prevent="addBudget" class="space-y-4">
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-2">Budget Name</label>
@@ -173,8 +173,8 @@
               </select>
             </div>
             <div class="flex space-x-3">
-              <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 flex-1">Create Budget</button>
-              <button type="button" @click="showAddBudget = false" class="bg-gray-200 hover:bg-gray-300 text-gray-900 font-medium py-2 px-4 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2">Cancel</button>
+              <button type="submit" class="btn-primary flex-1">Create Budget</button>
+              <button type="button" @click="showAddBudget = false" class="bg-gray-200 hover:bg-gray-300 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2">Cancel</button>
             </div>
           </form>
         </div>

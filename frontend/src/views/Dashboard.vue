@@ -13,23 +13,23 @@
     <!-- Page Header -->
     <div class="flex justify-between items-center mb-8">
       <div>
-        <h1 class="text-3xl font-bold text-gray-900">Dashboard</h1>
-        <p class="text-gray-600 mt-2">Welcome back, {{ username }}! Here's your financial overview.</p>
+        <h1 class="text-3xl font-bold text-white">Dashboard</h1>
+        <p class="text-slate-400 mt-2">Welcome back, {{ username }}! Here's your financial overview.</p>
       </div>
       <div class="flex space-x-3">
-        <button @click="refreshDashboard" class="bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-2 px-4 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2">
+        <button @click="refreshDashboard" class="btn-secondary">
           <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
           </svg>
           Refresh
         </button>
-        <button @click="showAddTransaction = true" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+        <button @click="showAddTransaction = true" class="btn-primary">
           <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
           </svg>
           Add Transaction
         </button>
-        <button @click="showAddBudget = true" class="bg-gray-200 hover:bg-gray-300 text-gray-900 font-medium py-2 px-4 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2">
+        <button @click="showAddBudget = true" class="btn-secondary">
           <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path>
           </svg>
@@ -39,20 +39,20 @@
     </div>
 
     <!-- Month Selector -->
-    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-8">
+    <div class="glass-card p-6 mb-8">
       <div class="flex items-center justify-between">
-        <h3 class="text-lg font-semibold text-gray-900">Viewing Data for {{ currentMonthDisplay }}</h3>
+        <h3 class="text-lg font-semibold text-white">Viewing Data for {{ currentMonthDisplay }}</h3>
         <div class="flex items-center space-x-3">
           <button @click="previousMonth" class="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-            <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
             </svg>
           </button>
-          <span class="text-lg font-medium text-gray-900 min-w-[120px] text-center">
+          <span class="text-lg font-medium text-white min-w-[120px] text-center">
             {{ currentMonthDisplay }}
           </span>
           <button @click="nextMonth" class="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-            <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
             </svg>
           </button>
@@ -65,7 +65,7 @@
     
     <!-- Financial Summary Cards -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-      <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+      <div class="glass-card p-6">
         <div class="flex items-center">
           <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
             <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -73,13 +73,13 @@
             </svg>
           </div>
           <div class="ml-4">
-            <p class="text-sm font-medium text-gray-600">Current Month Balance</p>
-            <p class="text-2xl font-bold text-gray-900">${{ currentMonthBalance.toFixed(2) }}</p>
+            <p class="text-sm font-medium text-slate-400">Current Month Balance</p>
+            <p class="text-2xl font-bold text-white">${{ currentMonthBalance.toFixed(2) }}</p>
           </div>
         </div>
       </div>
       
-      <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+      <div class="glass-card p-6">
         <div class="flex items-center">
           <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
             <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -87,13 +87,13 @@
             </svg>
           </div>
           <div class="ml-4">
-            <p class="text-sm font-medium text-gray-600">Current Month Income</p>
+            <p class="text-sm font-medium text-slate-400">Current Month Income</p>
             <p class="text-2xl font-bold text-green-600">${{ currentMonthIncome.toFixed(2) }}</p>
           </div>
         </div>
       </div>
       
-      <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+      <div class="glass-card p-6">
         <div class="flex items-center">
           <div class="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center">
             <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -101,13 +101,13 @@
             </svg>
           </div>
           <div class="ml-4">
-            <p class="text-sm font-medium text-gray-600">Current Month Expenses</p>
+            <p class="text-sm font-medium text-slate-400">Current Month Expenses</p>
             <p class="text-2xl font-bold text-red-600">${{ currentMonthExpenses.toFixed(2) }}</p>
           </div>
         </div>
       </div>
       
-      <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+      <div class="glass-card p-6">
         <div class="flex items-center">
           <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
             <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -115,7 +115,7 @@
             </svg>
           </div>
           <div class="ml-4">
-            <p class="text-sm font-medium text-gray-600">Current Month Budgets</p>
+            <p class="text-sm font-medium text-slate-400">Current Month Budgets</p>
             <p class="text-2xl font-bold text-purple-600">{{ currentMonthBudgets.length }}</p>
           </div>
         </div>
@@ -124,8 +124,8 @@
     
     <!-- Charts Section -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4 w-full">
-      <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6" style="height: 400px; overflow: hidden;">
-        <h3 class="text-lg font-semibold text-gray-900">Spending by Category - {{ currentMonthDisplay }}</h3>
+      <div class="glass-card p-6" style="height: 400px; overflow: hidden;">
+        <h3 class="text-lg font-semibold text-white">Spending by Category - {{ currentMonthDisplay }}</h3>
         <div style="height: 300px; position: relative; border: 1px dashed #ccc;">
           <canvas ref="categoryChart" style="max-height: 300px; width: 100% !important; height: 100% !important; display: block;"></canvas>
           <div v-if="!categoryChart" class="absolute inset-0 flex items-center justify-center text-gray-400">
@@ -134,8 +134,8 @@
         </div>
       </div>
       
-      <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6" style="height: 400px; overflow: hidden;">
-        <h3 class="text-lg font-semibold text-gray-900">Monthly Overview - Last 6 Months</h3>
+      <div class="glass-card p-6" style="height: 400px; overflow: hidden;">
+        <h3 class="text-lg font-semibold text-white">Monthly Overview - Last 6 Months</h3>
         <div style="height: 300px; position: relative; border: 1px dashed #ccc;">
           <canvas ref="monthlyChart" style="max-height: 300px; width: 100% !important; height: 100% !important; display: block;"></canvas>
           <div v-if="!monthlyChart" class="absolute inset-0 flex items-center justify-center text-gray-400">
@@ -146,9 +146,9 @@
     </div>
     
     <!-- Recent Transactions -->
-    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-4">
+    <div class="glass-card p-6 mb-4">
         <div class="flex justify-between items-center mb-4">
-          <h3 class="text-lg font-semibold text-gray-900">Current Month Transactions</h3>
+          <h3 class="text-lg font-semibold text-white">Current Month Transactions</h3>
           <router-link to="/transactions" class="text-blue-600 hover:text-blue-700 text-sm font-medium">
             View All
           </router-link>
@@ -169,13 +169,13 @@
                 </svg>
               </div>
               <div>
-                <p class="font-medium text-gray-900">{{ transaction.description }}</p>
+                <p class="font-medium text-white">{{ transaction.description }}</p>
                 <p class="text-sm text-gray-500">{{ transaction.category }}</p>
               </div>
             </div>
             <div class="flex items-center space-x-4">
               <div class="text-right">
-                <p class="font-medium text-gray-900" :class="transaction.type === 'EXPENSE' ? 'text-red-600' : 'text-green-600'">
+                <p class="font-medium text-white" :class="transaction.type === 'EXPENSE' ? 'text-red-600' : 'text-green-600'">
                   {{ transaction.type === 'EXPENSE' ? '-' : '+' }}${{ transaction.amount.toFixed(2) }}
                 </p>
                 <p class="text-sm text-gray-500">{{ formatDate(transaction.transactionDate) }}</p>
@@ -187,8 +187,8 @@
     </div>
 
     <!-- Budget Alerts -->
-    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-        <h3 class="text-lg font-semibold text-gray-900 mb-4">Budget Alerts for {{ currentMonthDisplay }}</h3>
+    <div class="glass-card p-6">
+        <h3 class="text-lg font-semibold text-white mb-4">Budget Alerts for {{ currentMonthDisplay }}</h3>
         <div class="space-y-3">
           <div v-if="budgetAlerts.length === 0" class="text-center py-8 text-gray-500">
             <svg class="w-12 h-12 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -203,58 +203,58 @@
               </svg>
             </div>
             <div class="flex-1">
-              <p class="font-medium text-gray-900">{{ alert.title }}</p>
-              <p class="text-sm text-gray-600">{{ alert.message }}</p>
+              <p class="font-medium text-white">{{ alert.title }}</p>
+              <p class="text-sm text-slate-400">{{ alert.message }}</p>
             </div>
           </div>
         </div>
     </div>
 
     <!-- Add Transaction Modal -->
-    <div v-if="showAddTransaction" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-      <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+    <div v-if="showAddTransaction" class="fixed inset-0 bg-dark-900/80 backdrop-blur-sm overflow-y-auto h-full w-full z-50 flex items-center justify-center animate-fade-in">
+      <div class="relative mx-auto p-8 border border-white/10 shadow-2xl rounded-2xl bg-dark-800 w-full max-w-md transform transition-all duration-300 animate-slide-up">
         <div class="mt-3">
-          <h3 class="text-lg font-medium text-gray-900 mb-4">Add New Transaction</h3>
+          <h3 class="text-2xl font-bold text-white mb-6">Add New Transaction</h3>
           <form @submit.prevent="addTransaction" class="space-y-4">
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">Description</label>
-              <input v-model="newTransaction.description" type="text" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" required>
+              <label class="form-label">Description</label>
+              <input v-model="newTransaction.description" type="text" class="input-field" placeholder="E.g., Groceries" required>
             </div>
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">Amount</label>
-              <input v-model="newTransaction.amount" type="number" step="0.01" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" required>
+              <label class="form-label">Amount</label>
+              <input v-model="newTransaction.amount" type="number" step="0.01" class="input-field" placeholder="0.00" required>
             </div>
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">Type</label>
-              <select v-model="newTransaction.type" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+              <label class="form-label">Type</label>
+              <select v-model="newTransaction.type" class="input-field bg-dark-900">
                 <option value="EXPENSE">Expense</option>
                 <option value="INCOME">Income</option>
               </select>
             </div>
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">Date</label>
-              <input v-model="newTransaction.transactionDate" type="date" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" required>
+              <label class="form-label">Date</label>
+              <input v-model="newTransaction.transactionDate" type="date" class="input-field" required>
             </div>
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">Category</label>
+              <label class="form-label">Category</label>
               <div class="relative">
                 <input 
                   v-model="newTransaction.category" 
                   type="text" 
-                  class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent pr-20" 
+                  class="input-field pr-20" 
                   placeholder="Smart categorization will suggest category"
-                  :class="newTransaction.category && newTransaction.category !== 'Uncategorized' ? 'border-green-300 bg-green-50' : ''"
+                  :class="newTransaction.category && newTransaction.category !== 'Uncategorized' ? 'border-green-500 bg-green-900/20' : ''"
                 >
                 <div class="absolute inset-y-0 right-0 flex items-center pr-3">
                   <div v-if="newTransaction.description && newTransaction.description.length > 3 && !newTransaction.category" class="flex items-center space-x-2">
-                    <div class="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
-                    <span class="text-xs text-blue-600">Analyzing...</span>
+                    <div class="w-2 h-2 bg-primary-500 rounded-full animate-pulse"></div>
+                    <span class="text-xs text-primary-400">Analyzing...</span>
                   </div>
                   <div v-else-if="newTransaction.category && newTransaction.category !== 'Uncategorized'" class="flex items-center space-x-2">
-                    <svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg class="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                     </svg>
-                    <span class="text-xs text-green-600">Category suggested</span>
+                    <span class="text-xs text-green-500">Category suggested</span>
                   </div>
                 </div>
               </div>
@@ -263,19 +263,19 @@
                   v-if="newTransaction.description && newTransaction.description.length > 3" 
                   @click="suggestCategory(newTransaction.description)" 
                   type="button"
-                  class="text-xs bg-blue-100 text-blue-600 px-2 py-1 rounded hover:bg-blue-200 transition-colors"
+                  class="text-xs bg-primary-500/20 text-primary-400 px-2 py-1 rounded hover:bg-primary-500/30 transition-colors"
                 >
                   🤖 Get Smart Suggestion
                 </button>
-                <p v-if="newTransaction.category && newTransaction.category !== 'Uncategorized'" class="text-xs text-green-600">
+                <p v-if="newTransaction.category && newTransaction.category !== 'Uncategorized'" class="text-xs text-green-500">
                   Smart suggestion: <span class="font-medium">{{ newTransaction.category }}</span>
                 </p>
               </div>
             </div>
 
-            <div class="flex space-x-3">
-              <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 flex-1">Add Transaction</button>
-              <button type="button" @click="showAddTransaction = false" class="bg-gray-200 hover:bg-gray-300 text-gray-900 font-medium py-2 px-4 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2">Cancel</button>
+            <div class="flex space-x-3 pt-4">
+              <button type="button" @click="showAddTransaction = false" class="btn-secondary flex-1">Cancel</button>
+              <button type="submit" class="btn-primary flex-1">Add Transaction</button>
             </div>
           </form>
         </div>
@@ -283,41 +283,41 @@
     </div>
 
     <!-- Add Budget Modal -->
-    <div v-if="showAddBudget" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-      <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+    <div v-if="showAddBudget" class="fixed inset-0 bg-dark-900/80 backdrop-blur-sm overflow-y-auto h-full w-full z-50 flex items-center justify-center animate-fade-in">
+      <div class="relative mx-auto p-8 border border-white/10 shadow-2xl rounded-2xl bg-dark-800 w-full max-w-md transform transition-all duration-300 animate-slide-up">
         <div class="mt-3">
-          <h3 class="text-lg font-medium text-gray-900 mb-4">Create New Budget</h3>
+          <h3 class="text-2xl font-bold text-white mb-6">Create New Budget</h3>
           <form @submit.prevent="addBudget" class="space-y-4">
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">Budget Name</label>
-              <input v-model="newBudget.name" type="text" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" required>
+              <label class="form-label">Budget Name</label>
+              <input v-model="newBudget.name" type="text" class="input-field" placeholder="E.g., Monthly Groceries" required>
             </div>
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">Amount</label>
-              <input v-model="newBudget.amount" type="number" step="0.01" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" required>
+              <label class="form-label">Amount</label>
+              <input v-model="newBudget.amount" type="number" step="0.01" class="input-field" placeholder="0.00" required>
             </div>
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">Start Month</label>
-              <input v-model="newBudget.startMonth" type="month" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" required>
+              <label class="form-label">Start Month</label>
+              <input v-model="newBudget.startMonth" type="month" class="input-field" required>
             </div>
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">Category</label>
+              <label class="form-label">Category</label>
               <div class="relative">
                 <input 
                   v-model="newBudget.category" 
                   type="text" 
                   :class="[
-                    'w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent',
-                    isBudgetAnalyzing ? 'border-yellow-300 bg-yellow-50' : 
-                    isBudgetSmartSuggested ? 'border-green-300 bg-green-50' : 'border-gray-300'
+                    'input-field pr-20',
+                    isBudgetAnalyzing ? 'border-yellow-500 bg-yellow-900/20' : 
+                    isBudgetSmartSuggested ? 'border-green-500 bg-green-900/20' : ''
                   ]"
                   placeholder="Type to get smart suggestions..."
                   required
                 >
-                <div v-if="isBudgetAnalyzing" class="absolute right-3 top-2.5 text-yellow-600 text-sm">
+                <div v-if="isBudgetAnalyzing" class="absolute right-3 top-3.5 text-yellow-500 text-xs font-medium">
                   🤖 Smart analyzing...
                 </div>
-                <div v-else-if="isBudgetSmartSuggested" class="absolute right-3 top-2.5 text-green-600 text-sm">
+                <div v-else-if="isBudgetSmartSuggested" class="absolute right-3 top-3.5 text-green-500 text-xs font-medium">
                   ✨ Smart suggested
                 </div>
               </div>
@@ -325,24 +325,24 @@
                 <button 
                   type="button" 
                   @click="suggestBudgetCategory(newBudget.name)" 
-                  class="text-sm text-blue-600 hover:text-blue-800 font-medium flex items-center"
+                  class="text-xs text-primary-400 hover:text-primary-300 font-medium flex items-center"
                 >
                   🤖 Get Smart Suggestion
                 </button>
               </div>
             </div>
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">Period</label>
-              <select v-model="newBudget.period" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+              <label class="form-label">Period</label>
+              <select v-model="newBudget.period" class="input-field bg-dark-900">
                 <option value="WEEKLY">Weekly</option>
                 <option value="MONTHLY">Monthly</option>
                 <option value="QUARTERLY">Quarterly</option>
                 <option value="YEARLY">Yearly</option>
               </select>
             </div>
-            <div class="flex space-x-3">
-              <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 flex-1">Create Budget</button>
-              <button type="button" @click="showAddBudget = false" class="bg-gray-200 hover:bg-gray-300 text-gray-900 font-medium py-2 px-4 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2">Cancel</button>
+            <div class="flex space-x-3 pt-4">
+              <button type="button" @click="showAddBudget = false" class="btn-secondary flex-1">Cancel</button>
+              <button type="submit" class="btn-primary flex-1">Create Budget</button>
             </div>
           </form>
         </div>

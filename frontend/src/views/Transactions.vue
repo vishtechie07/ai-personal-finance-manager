@@ -3,10 +3,10 @@
     <!-- Page Header -->
     <div class="flex justify-between items-center">
       <div>
-        <h1 class="text-3xl font-bold text-gray-900">Transactions</h1>
-        <p class="text-gray-600 mt-2">Manage your financial transactions</p>
+        <h1 class="text-3xl font-bold text-white">Transactions</h1>
+        <p class="text-slate-400 mt-2">Manage your financial transactions</p>
       </div>
-      <button @click="showAddTransaction = true" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+      <button @click="showAddTransaction = true" class="btn-primary">
         <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
         </svg>
@@ -15,20 +15,20 @@
     </div>
 
     <!-- Month Selector -->
-    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
+    <div class="glass-card p-4">
       <div class="flex items-center justify-between">
-        <h3 class="text-lg font-semibold text-gray-900">Filter by Month</h3>
+        <h3 class="text-lg font-semibold text-white">Filter by Month</h3>
         <div class="flex items-center space-x-3">
           <button @click="previousMonth" class="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-            <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
             </svg>
           </button>
-          <span class="text-lg font-medium text-gray-900 min-w-[120px] text-center">
+          <span class="text-lg font-medium text-white min-w-[120px] text-center">
             {{ currentMonthDisplay }}
           </span>
           <button @click="nextMonth" class="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-            <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
             </svg>
           </button>
@@ -40,16 +40,16 @@
     </div>
 
     <!-- Transactions List -->
-    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+    <div class="glass-card p-6">
       <div class="flex justify-between items-center mb-4">
-        <h3 class="text-lg font-semibold text-gray-900">Transactions for {{ currentMonthDisplay }}</h3>
-        <div class="text-sm text-gray-500">
+        <h3 class="text-lg font-semibold text-white">Transactions for {{ currentMonthDisplay }}</h3>
+        <div class="text-sm text-slate-500">
           {{ filteredTransactions.length }} transaction{{ filteredTransactions.length !== 1 ? 's' : '' }}
         </div>
       </div>
       <div class="space-y-3">
         <div v-for="transaction in filteredTransactions" :key="transaction.id" 
-             class="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+             class="flex items-center justify-between p-3 bg-dark-800/50 rounded-lg hover:bg-gray-100 transition-colors">
           <div class="flex items-center space-x-3">
             <div class="w-8 h-8 rounded-full flex items-center justify-center" 
                  :class="transaction.type === 'EXPENSE' ? 'bg-red-100' : 'bg-green-100'">
@@ -58,19 +58,19 @@
               </svg>
             </div>
             <div>
-              <p class="font-medium text-gray-900">{{ transaction.description }}</p>
-              <p class="text-sm text-gray-500">{{ transaction.category }}</p>
+              <p class="font-medium text-white">{{ transaction.description }}</p>
+              <p class="text-sm text-slate-500">{{ transaction.category }}</p>
             </div>
           </div>
           <div class="text-right">
-            <p class="font-medium text-gray-900" :class="transaction.type === 'EXPENSE' ? 'text-red-600' : 'text-green-600'">
+            <p class="font-medium text-white" :class="transaction.type === 'EXPENSE' ? 'text-red-600' : 'text-green-600'">
               {{ transaction.type === 'EXPENSE' ? '-' : '+' }}${{ transaction.amount.toFixed(2) }}
             </p>
-            <p class="text-sm text-gray-500">{{ formatDate(transaction.transactionDate) }}</p>
+            <p class="text-sm text-slate-500">{{ formatDate(transaction.transactionDate) }}</p>
           </div>
         </div>
         
-        <div v-if="filteredTransactions.length === 0" class="text-center py-8 text-gray-500">
+        <div v-if="filteredTransactions.length === 0" class="text-center py-8 text-slate-500">
           <svg class="w-12 h-12 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
           </svg>
@@ -83,7 +83,7 @@
     <div v-if="showAddTransaction" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
       <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
         <div class="mt-3">
-          <h3 class="text-lg font-medium text-gray-900 mb-4">Add New Transaction</h3>
+          <h3 class="text-lg font-medium text-white mb-4">Add New Transaction</h3>
           <form @submit.prevent="addTransaction" class="space-y-4">
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-2">Description</label>
@@ -143,8 +143,8 @@
             </div>
 
             <div class="flex space-x-3">
-              <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 flex-1">Add Transaction</button>
-              <button type="button" @click="showAddTransaction = false" class="bg-gray-200 hover:bg-gray-300 text-gray-900 font-medium py-2 px-4 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2">Cancel</button>
+              <button type="submit" class="btn-primary flex-1">Add Transaction</button>
+              <button type="button" @click="showAddTransaction = false" class="bg-gray-200 hover:bg-gray-300 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2">Cancel</button>
             </div>
           </form>
         </div>
