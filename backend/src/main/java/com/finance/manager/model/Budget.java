@@ -1,5 +1,6 @@
 package com.finance.manager.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
@@ -55,6 +56,11 @@ public class Budget {
     
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
+    @ManyToOne(optional = false, fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    @JsonIgnore
+    private User owner;
 
     // Default constructor
     public Budget() {}
@@ -240,6 +246,14 @@ public class Budget {
     
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
+    }
+
+    public User getOwner() {
+        return owner;
+    }
+
+    public void setOwner(User owner) {
+        this.owner = owner;
     }
 
     public enum BudgetPeriod {

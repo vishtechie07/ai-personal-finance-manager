@@ -5,7 +5,7 @@ A comprehensive personal finance management application built with Spring Boot (
 ## Features
 
 ### Core Functionality
-- **User Authentication**: Secure login and registration system with token validation (demo token flow)
+- **User Authentication**: JWT-based login and registration; passwords stored with BCrypt
 - **Transaction Management**: Add, view, update, and delete financial transactions
 - **Budget Management**: Create and monitor budgets for various spending categories
 - **Data Visualization**: Interactive charts and graphs for financial insights
@@ -19,7 +19,7 @@ A comprehensive personal finance management application built with Spring Boot (
 
 ### Backend
 - **Java 17** with **Spring Boot 3.2.0**
-- Token validation (demo token flow)
+- **JWT authentication** (Spring Security) and BCrypt password hashing
 - **Spring Data JPA** with **Hibernate**
 - **H2 Database** (development) / **PostgreSQL** (production ready)
 - **Maven** for dependency management
@@ -104,8 +104,11 @@ A comprehensive personal finance management application built with Spring Boot (
 1. Deploy using the repository root `Dockerfile` (it serves the Vue app with Nginx and proxies `/api/*` to the Spring Boot backend).
 2. Set:
    - `SPRING_PROFILES_ACTIVE=railway`
-   - Postgres connection variables provided by Railway (commonly `DATABASE_URL` and credentials like `DATABASE_USERNAME` / `DATABASE_PASSWORD`).
-3. Result:
+   - **`JWT_SECRET`** — at least **32 characters** (signing key for access tokens)
+   - Postgres connection variables (`DATABASE_URL` as `jdbc:postgresql://...` without credentials in the URL; plus `DATABASE_USERNAME` / `DATABASE_PASSWORD` or `POSTGRES_*` as configured)
+   - Optional: `JWT_EXPIRATION_MS` (default `86400000`), `CORS_ALLOWED_ORIGIN_PATTERNS` (comma-separated patterns; default allows `https://*.up.railway.app`)
+3. **Networking**: expose the service on port **80** (Nginx); Spring listens on `8081` inside the container.
+4. Result:
    - Frontend UI served at `/`
    - Backend API under `/api` (for example: `/api/auth/login`, `/api/auth/register`)
 

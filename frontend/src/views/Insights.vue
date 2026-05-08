@@ -409,22 +409,9 @@ export default {
         if (!budgetsStore.isInitialized) {
           await budgetsStore.fetchBudgets()
         }
-        
-        // If still no data, initialize with demo data
-        if (transactionsStore.transactions.length === 0) {
-          transactionsStore.initializeWithDemoData()
-        }
-        if (budgetsStore.budgets.length === 0) {
-          budgetsStore.initializeWithDemoData()
-        }
+
       } catch (error) {
-        // Ensure demo data is loaded if everything fails
-        if (transactionsStore.transactions.length === 0) {
-          transactionsStore.initializeWithDemoData()
-        }
-        if (budgetsStore.budgets.length === 0) {
-          budgetsStore.initializeWithDemoData()
-        }
+        console.error('Insights load error:', error)
       }
     })
 

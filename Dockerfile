@@ -35,6 +35,8 @@ RUN chmod +x /entrypoint.sh
 
 ENV SERVER_PORT=8081
 
+# Production (SPRING_PROFILES_ACTIVE=railway): set JWT_SECRET (≥32 chars), database URLs, CORS if needed.
+
 EXPOSE 80
 CMD ["/entrypoint.sh"]
 

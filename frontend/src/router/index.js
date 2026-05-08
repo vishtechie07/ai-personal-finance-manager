@@ -42,6 +42,12 @@ const routes = [
     component: () => import('../views/Profile.vue'),
     meta: { requiresAuth: true }
   },
+  {
+    path: '/settings',
+    name: 'Settings',
+    component: () => import('../views/Settings.vue'),
+    meta: { requiresAuth: true }
+  },
 
 ]
 
@@ -50,11 +56,22 @@ const router = createRouter({
   routes
 })
 
-// Navigation guard for authentication
-// router.beforeEach((to, from, next) => {
-//   // For now, allow all navigation to prevent blocking
-//   // In a real app, you would check authentication here
-//   next()
-// })
+router.beforeEach(async (to, from, next) => {
+  if (!to.meta.requiresAuth) {
+    next()
+    return
+  }
+  const authStore = useAuthStore()
+  if (!authStore.token) {
+    next({ path: '/', query: { redirect: to.fullPath } })
+    return
+  }
+  const ok = await authStore.checkAuth()
+  if (!ok) {
+    next({ path: '/', query: { redirect: to.fullPath } })
+    return
+  }
+  next()
+})
 
 export default router

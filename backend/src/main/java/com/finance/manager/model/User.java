@@ -1,5 +1,6 @@
 package com.finance.manager.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -44,6 +45,12 @@ public class User {
     
     @Enumerated(EnumType.STRING)
     private Role role;
+
+    /**
+     * AES-GCM encrypted OpenAI API key (never exposed in JSON).
+     */
+    @Column(name = "openai_api_key_encrypted", columnDefinition = "TEXT")
+    private String openaiApiKeyEncrypted;
     
     @PrePersist
     protected void onCreate() {
@@ -130,6 +137,15 @@ public class User {
     
     public void setRole(Role role) {
         this.role = role;
+    }
+
+    @JsonIgnore
+    public String getOpenaiApiKeyEncrypted() {
+        return openaiApiKeyEncrypted;
+    }
+
+    public void setOpenaiApiKeyEncrypted(String openaiApiKeyEncrypted) {
+        this.openaiApiKeyEncrypted = openaiApiKeyEncrypted;
     }
     
     public enum Role {

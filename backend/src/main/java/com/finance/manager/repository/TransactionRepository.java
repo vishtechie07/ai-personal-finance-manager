@@ -6,16 +6,14 @@ import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface TransactionRepository extends JpaRepository<Transaction, Long> {
-    // Basic CRUD operations are provided by JpaRepository
-    
-    /**
-     * Find transactions between two dates
-     * @param startDate Start date
-     * @param endDate End date
-     * @return List of transactions within the date range
-     */
-    List<Transaction> findByTransactionDateBetween(LocalDateTime startDate, LocalDateTime endDate);
+
+    List<Transaction> findByOwner_Id(Long ownerId);
+
+    List<Transaction> findByOwner_IdAndTransactionDateBetween(Long ownerId, LocalDateTime startDate, LocalDateTime endDate);
+
+    Optional<Transaction> findByIdAndOwner_Id(Long id, Long ownerId);
 }

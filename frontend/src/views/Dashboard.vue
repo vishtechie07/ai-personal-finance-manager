@@ -360,6 +360,7 @@ import { useBudgetsStore } from '../stores/budgets'
 import { Chart, registerables } from 'chart.js'
 import { format } from 'date-fns'
 import { useRouter } from 'vue-router'
+import { resolveCategory, TRANSACTION_KEYWORDS, BUDGET_KEYWORDS } from '../utils/categorySuggestion'
 
 Chart.register(...registerables)
 
@@ -370,29 +371,6 @@ export default {
     const transactionsStore = useTransactionsStore()
     const budgetsStore = useBudgetsStore()
     const router = useRouter()
-    
-    // Initialize demo data if stores are empty
-    setTimeout(() => {
-      if (transactionsStore && transactionsStore.transactions.length === 0) {
-        try {
-          if (typeof transactionsStore.initializeWithDemoData === 'function') {
-            transactionsStore.initializeWithDemoData()
-          }
-        } catch (error) {
-          // Handle error silently
-        }
-      }
-      
-      if (budgetsStore && budgetsStore.budgets.length === 0) {
-        try {
-          if (typeof budgetsStore.initializeWithDemoData === 'function') {
-            budgetsStore.initializeWithDemoData()
-          }
-        } catch (error) {
-          // Handle error silently
-        }
-      }
-    }, 100)
     
     const showAddTransaction = ref(false)
     const showAddBudget = ref(false)
@@ -629,49 +607,9 @@ export default {
 
 
 
-    // Smart Category Suggestion Function
     const suggestCategory = async (description) => {
-      if (!description || description.trim().length < 3) return
-      
-      // Simple smart logic based on keywords in description
-      const descriptionLower = description.toLowerCase()
-      
-      const categoryKeywords = {
-        'FOOD_GROCERIES': ['food', 'grocery', 'supermarket', 'walmart', 'target', 'costco', 'safeway', 'kroger'],
-        'FOOD_RESTAURANT': ['restaurant', 'dining', 'meal', 'lunch', 'dinner', 'breakfast', 'coffee', 'snack', 'pizza', 'burger', 'sushi', 'share', 'doordash', 'uber eats'],
-        'TRANSPORTATION': ['gas', 'fuel', 'uber', 'lyft', 'taxi', 'bus', 'train', 'subway', 'parking', 'toll', 'car', 'vehicle', 'transport'],
-        'HOUSING_RENT': ['rent', 'lease'],
-        'HOUSING_UTILITIES': ['utilities', 'electricity', 'water', 'gas', 'internet', 'cable', 'wifi'],
-        'HOUSING_MAINTENANCE': ['maintenance', 'repair', 'home', 'house', 'plumbing', 'electrical'],
-        'ENTERTAINMENT': ['movie', 'theater', 'concert', 'show', 'game', 'ticket', 'amusement', 'park', 'museum', 'zoo', 'entertainment', 'netflix', 'spotify'],
-        'SHOPPING': ['clothes', 'shoes', 'accessories', 'electronics', 'books', 'gifts', 'shopping', 'store', 'mall', 'online', 'amazon'],
-        'HEALTHCARE': ['doctor', 'dentist', 'pharmacy', 'medicine', 'medical', 'health', 'insurance', 'hospital', 'clinic', 'therapy'],
-        'SALARY': ['salary', 'wage', 'income', 'payment', 'deposit', 'bonus', 'commission', 'overtime', 'paycheck'],
-        'INVESTMENTS': ['dividend', 'interest', 'investment', 'stock', 'bond', 'fund', 'portfolio', 'return', 'profit']
-      }
-      
-      // Find the best matching category
-      let bestMatch = 'Uncategorized'
-      let bestScore = 0
-      
-      for (const [category, keywords] of Object.entries(categoryKeywords)) {
-        let score = 0
-        for (const keyword of keywords) {
-          if (descriptionLower.includes(keyword)) {
-            score += 1
-          }
-        }
-        if (score > bestScore) {
-          bestScore = score
-          bestMatch = category
-        }
-      }
-      
-      // Only update if we found a meaningful match
-      if (bestScore > 0 && bestMatch !== 'Uncategorized') {
-        newTransaction.value.category = bestMatch
-      }
-      
+      const cat = await resolveCategory(description, TRANSACTION_KEYWORDS)
+      if (cat) newTransaction.value.category = cat
     }
 
     // Watch for description changes to trigger smart suggestion
@@ -685,57 +623,16 @@ export default {
       // Don't clear category when description is short - let user keep it
     })
 
-    // Budget Smart Category Suggestion Function
     const suggestBudgetCategory = async (budgetName) => {
       if (!budgetName || budgetName.trim().length < 3) return
-
       isBudgetSmartSuggested.value = false
-      
-      // Simulate smart processing delay
-      await new Promise(resolve => setTimeout(resolve, 500))
-      
-      const budgetNameLower = budgetName.toLowerCase()
-      let bestMatch = null
-      let bestScore = 0
-      
-      // Budget category keywords - using backend enum values
-      const categoryKeywords = {
-        'FOOD_GROCERIES': ['food', 'groceries', 'supermarket', 'walmart', 'target', 'costco'],
-        'FOOD_RESTAURANT': ['dining', 'restaurant', 'meal', 'lunch', 'dinner', 'breakfast', 'cafe', 'coffee', 'snack'],
-        'TRANSPORTATION': ['transport', 'gas', 'fuel', 'car', 'uber', 'lyft', 'taxi', 'bus', 'train', 'subway', 'parking', 'maintenance', 'insurance'],
-        'HOUSING_RENT': ['rent', 'lease'],
-        'HOUSING_UTILITIES': ['utilities', 'electricity', 'water', 'gas', 'internet', 'wifi'],
-        'HOUSING_MAINTENANCE': ['maintenance', 'repair', 'furniture'],
-        'ENTERTAINMENT': ['entertainment', 'movie', 'game', 'concert', 'show', 'theater', 'sport', 'hobby', 'gym', 'fitness', 'streaming'],
-        'SHOPPING': ['shopping', 'clothes', 'electronics', 'books', 'gift', 'fashion', 'accessories', 'beauty', 'cosmetics'],
-        'HEALTHCARE': ['health', 'medical', 'doctor', 'dentist', 'pharmacy', 'medicine', 'insurance', 'therapy', 'wellness'],
-        'EDUCATION': ['school', 'college', 'university', 'course', 'training', 'education', 'tuition', 'books', 'supplies'],
-        'TRAVEL': ['vacation', 'trip', 'flight', 'hotel', 'travel', 'tourism', 'lodging', 'airfare']
-      }
-      
-      // Find the best matching category
-      for (const [category, keywords] of Object.entries(categoryKeywords)) {
-        let score = 0
-        for (const keyword of keywords) {
-          if (budgetNameLower.includes(keyword)) {
-            score += 1
-          }
-        }
-        
-        if (score > bestScore) {
-          bestScore = score
-          bestMatch = category
-        }
-      }
-      
-      // Update the category field with the suggestion
-      if (bestMatch && bestScore > 0) {
-        newBudget.value.category = bestMatch
+      const cat = await resolveCategory(budgetName, BUDGET_KEYWORDS)
+      if (cat) {
+        newBudget.value.category = cat
         isBudgetSmartSuggested.value = true
       } else {
         newBudget.value.category = 'Uncategorized'
       }
-      
     }
 
     // Watch for budget name changes to trigger smart suggestions
@@ -994,24 +891,9 @@ export default {
         if (!budgetsStore.isInitialized) {
           await budgetsStore.fetchBudgets()
         }
-        
-        // If still no data, initialize with demo data
-        if (transactionsStore.transactions.length === 0) {
-          transactionsStore.initializeWithDemoData()
-        }
-        
-        if (budgetsStore.budgets.length === 0) {
-          budgetsStore.initializeWithDemoData()
-        }
-        
+
       } catch (error) {
-        // Ensure demo data is loaded if everything fails
-        if (transactionsStore.transactions.length === 0) {
-          transactionsStore.initializeWithDemoData()
-        }
-        if (budgetsStore.budgets.length === 0) {
-          budgetsStore.initializeWithDemoData()
-        }
+        console.error('Dashboard load error:', error)
       }
       
       // Add a small delay to ensure DOM is fully ready and data is loaded

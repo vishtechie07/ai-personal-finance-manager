@@ -1,10 +1,11 @@
 package com.finance.manager.controller;
 
 import com.finance.manager.model.Transaction;
+import com.finance.manager.security.AuthPrincipal;
 import com.finance.manager.service.TransactionService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
@@ -14,91 +15,76 @@ import java.util.List;
 @RestController
 @RequestMapping("/transactions")
 public class TransactionController {
-    
-    @Autowired
-    private TransactionService transactionService;
-    
-    /**
-     * Create a new transaction
-     */
+
+    private final TransactionService transactionService;
+
+    public TransactionController(TransactionService transactionService) {
+        this.transactionService = transactionService;
+    }
+
     @PostMapping
-    public ResponseEntity<Transaction> createTransaction(@RequestBody Transaction transaction) {
-        Transaction createdTransaction = transactionService.createTransaction(transaction);
-        return ResponseEntity.ok(createdTransaction);
+    public ResponseEntity<Transaction> createTransaction(
+            @AuthenticationPrincipal AuthPrincipal principal,
+            @RequestBody Transaction transaction) {
+        Transaction created = transactionService.createTransaction(principal.userId(), transaction);
+        return ResponseEntity.ok(created);
     }
-    
-    /**
-     * Get all transactions
-     */
+
     @GetMapping
-    public ResponseEntity<List<Transaction>> getAllTransactions() {
-        List<Transaction> transactions = transactionService.getAllTransactions();
-        return ResponseEntity.ok(transactions);
+    public ResponseEntity<List<Transaction>> getAllTransactions(@AuthenticationPrincipal AuthPrincipal principal) {
+        return ResponseEntity.ok(transactionService.getAllTransactions(principal.userId()));
     }
-    
-    /**
-     * Get transactions by month (YYYY-MM format)
-     */
+
     @GetMapping("/month/{yearMonth}")
-    public ResponseEntity<List<Transaction>> getTransactionsByMonth(@PathVariable String yearMonth) {
+    public ResponseEntity<List<Transaction>> getTransactionsByMonth(
+            @AuthenticationPrincipal AuthPrincipal principal,
+            @PathVariable String yearMonth) {
         try {
             YearMonth month = YearMonth.parse(yearMonth);
-            List<Transaction> transactions = transactionService.getTransactionsByMonth(month);
-            return ResponseEntity.ok(transactions);
+            return ResponseEntity.ok(transactionService.getTransactionsByMonth(principal.userId(), month));
         } catch (Exception e) {
             return ResponseEntity.badRequest().build();
         }
     }
-    
-    /**
-     * Get transactions by date range
-     */
+
     @GetMapping("/range")
     public ResponseEntity<List<Transaction>> getTransactionsByDateRange(
+            @AuthenticationPrincipal AuthPrincipal principal,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startDate,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endDate) {
-        List<Transaction> transactions = transactionService.getTransactionsByDateRange(startDate, endDate);
-        return ResponseEntity.ok(transactions);
+        return ResponseEntity.ok(transactionService.getTransactionsByDateRange(principal.userId(), startDate, endDate));
     }
-    
-    /**
-     * Get transactions for current month
-     */
+
     @GetMapping("/current-month")
-    public ResponseEntity<List<Transaction>> getCurrentMonthTransactions() {
-        List<Transaction> transactions = transactionService.getCurrentMonthTransactions();
-        return ResponseEntity.ok(transactions);
+    public ResponseEntity<List<Transaction>> getCurrentMonthTransactions(@AuthenticationPrincipal AuthPrincipal principal) {
+        return ResponseEntity.ok(transactionService.getCurrentMonthTransactions(principal.userId()));
     }
-    
-    /**
-     * Get a specific transaction
-     */
+
     @GetMapping("/{id}")
-    public ResponseEntity<Transaction> getTransaction(@PathVariable Long id) {
-        Transaction transaction = transactionService.getTransactionById(id);
+    public ResponseEntity<Transaction> getTransaction(
+            @AuthenticationPrincipal AuthPrincipal principal,
+            @PathVariable Long id) {
+        Transaction transaction = transactionService.getTransactionById(principal.userId(), id);
         if (transaction == null) {
             return ResponseEntity.notFound().build();
         }
         return ResponseEntity.ok(transaction);
     }
-    
-    /**
-     * Update a transaction
-     */
+
     @PutMapping("/{id}")
     public ResponseEntity<Transaction> updateTransaction(
+            @AuthenticationPrincipal AuthPrincipal principal,
             @PathVariable Long id,
             @RequestBody Transaction transaction) {
-        Transaction updatedTransaction = transactionService.updateTransaction(id, transaction);
-        return ResponseEntity.ok(updatedTransaction);
+        Transaction updated = transactionService.updateTransaction(principal.userId(), id, transaction);
+        return ResponseEntity.ok(updated);
     }
-    
-    /**
-     * Delete a transaction
-     */
+
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteTransaction(@PathVariable Long id) {
-        transactionService.deleteTransaction(id);
+    public ResponseEntity<Void> deleteTransaction(
+            @AuthenticationPrincipal AuthPrincipal principal,
+            @PathVariable Long id) {
+        transactionService.deleteTransaction(principal.userId(), id);
         return ResponseEntity.noContent().build();
     }
 }

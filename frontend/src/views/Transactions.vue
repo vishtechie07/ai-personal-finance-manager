@@ -157,6 +157,7 @@
 import { ref, computed, watch, onMounted } from 'vue'
 import { useTransactionsStore } from '../stores/transactions'
 import { useBudgetsStore } from '../stores/budgets'
+import { resolveCategory, TRANSACTION_KEYWORDS } from '../utils/categorySuggestion'
 
 export default {
   name: 'Transactions',
@@ -250,49 +251,9 @@ export default {
       }
     }
 
-    // Smart Category Suggestion Function
     const suggestCategory = async (description) => {
-      if (!description || description.trim().length < 3) return
-      
-      // Simple smart logic based on keywords in description
-      const descriptionLower = description.toLowerCase()
-      
-      const categoryKeywords = {
-        'FOOD_GROCERIES': ['food', 'grocery', 'supermarket', 'walmart', 'target', 'costco', 'safeway', 'kroger'],
-        'FOOD_RESTAURANT': ['restaurant', 'dining', 'meal', 'lunch', 'dinner', 'breakfast', 'coffee', 'snack', 'pizza', 'burger', 'sushi', 'share', 'doordash', 'uber eats'],
-        'TRANSPORTATION': ['gas', 'fuel', 'uber', 'lyft', 'taxi', 'bus', 'train', 'subway', 'parking', 'toll', 'car', 'vehicle', 'transport'],
-        'HOUSING_RENT': ['rent', 'lease'],
-        'HOUSING_UTILITIES': ['utilities', 'electricity', 'water', 'gas', 'internet', 'cable', 'wifi'],
-        'HOUSING_MAINTENANCE': ['maintenance', 'repair', 'home', 'house', 'plumbing', 'electrical'],
-        'ENTERTAINMENT': ['movie', 'theater', 'concert', 'show', 'game', 'ticket', 'amusement', 'park', 'museum', 'zoo', 'entertainment', 'netflix', 'spotify'],
-        'SHOPPING': ['clothes', 'shoes', 'accessories', 'electronics', 'books', 'gifts', 'shopping', 'store', 'mall', 'online', 'amazon'],
-        'HEALTHCARE': ['doctor', 'dentist', 'pharmacy', 'medicine', 'medical', 'health', 'insurance', 'hospital', 'clinic', 'therapy'],
-        'SALARY': ['salary', 'wage', 'income', 'payment', 'deposit', 'bonus', 'commission', 'overtime', 'paycheck'],
-        'INVESTMENTS': ['dividend', 'interest', 'investment', 'stock', 'bond', 'fund', 'portfolio', 'return', 'profit']
-      }
-      
-      // Find the best matching category
-      let bestMatch = 'Uncategorized'
-      let bestScore = 0
-      
-      for (const [category, keywords] of Object.entries(categoryKeywords)) {
-        let score = 0
-        for (const keyword of keywords) {
-          if (descriptionLower.includes(keyword)) {
-            score += 1
-          }
-        }
-        if (score > bestScore) {
-          bestScore = score
-          bestMatch = category
-        }
-      }
-      
-      // Only update if we found a meaningful match
-      if (bestScore > 0 && bestMatch !== 'Uncategorized') {
-        newTransaction.value.category = bestMatch
-      }
-      
+      const cat = await resolveCategory(description, TRANSACTION_KEYWORDS)
+      if (cat) newTransaction.value.category = cat
     }
 
     // Watch for description changes to trigger smart suggestion
@@ -377,16 +338,9 @@ export default {
         if (!transactionsStore.isInitialized) {
           await transactionsStore.fetchTransactions()
         }
-        
-        // If still no data, initialize with demo data
-        if (transactionsStore.transactions.length === 0) {
-          transactionsStore.initializeWithDemoData()
-        }
+
       } catch (error) {
-        // Ensure demo data is loaded if everything fails
-        if (transactionsStore.transactions.length === 0) {
-          transactionsStore.initializeWithDemoData()
-        }
+        console.error('Transactions load error:', error)
       }
     })
 

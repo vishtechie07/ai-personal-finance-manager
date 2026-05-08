@@ -3,7 +3,6 @@ import { ref, computed } from 'vue'
 import axios from 'axios'
 
 export const useBudgetsStore = defineStore('budgets', () => {
-  // State
   const budgets = ref([])
   const isLoading = ref(false)
   const error = ref(null)
@@ -11,7 +10,6 @@ export const useBudgetsStore = defineStore('budgets', () => {
   const currentMonth = ref(new Date().getMonth())
   const currentYear = ref(new Date().getFullYear())
 
-  // Getters
   const totalBudgetAmount = computed(() => {
     return budgets.value.reduce((sum, budget) => sum + parseFloat(budget.amount || 0), 0)
   })
@@ -38,7 +36,6 @@ export const useBudgetsStore = defineStore('budgets', () => {
     })
   })
 
-  // Month-filtered versions for current month alerts
   const currentMonthOverBudgetBudgets = computed(() => {
     return budgetsByMonth.value.filter(budget => {
       const remaining = parseFloat(budget.remainingAmount || 0)
@@ -53,11 +50,10 @@ export const useBudgetsStore = defineStore('budgets', () => {
     })
   })
 
-  // Month-based filtering
   const budgetsByMonth = computed(() => {
     return budgets.value.filter(budget => {
       const budgetDate = new Date(budget.startDate)
-      return budgetDate.getMonth() === currentMonth.value && 
+      return budgetDate.getMonth() === currentMonth.value &&
              budgetDate.getFullYear() === currentYear.value
     })
   })
@@ -74,15 +70,14 @@ export const useBudgetsStore = defineStore('budgets', () => {
     return currentMonthBudgetAmount.value - currentMonthSpentAmount.value
   })
 
-  // Actions
   const fetchBudgets = async () => {
-    if (isLoading.value) return // Prevent multiple simultaneous requests
-    
+    if (isLoading.value) return
+
     isLoading.value = true
     error.value = null
     try {
       const response = await axios.get('/budgets')
-      
+
       if (response.data && Array.isArray(response.data)) {
         budgets.value = response.data
         isInitialized.value = true
@@ -92,11 +87,7 @@ export const useBudgetsStore = defineStore('budgets', () => {
     } catch (err) {
       error.value = err.message
       console.error('Failed to fetch budgets:', err)
-      
-      // If backend is not available, initialize with demo data
-      if (!isInitialized.value) {
-        initializeWithDemoData()
-      }
+      budgets.value = []
     } finally {
       isLoading.value = false
     }
@@ -112,67 +103,28 @@ export const useBudgetsStore = defineStore('budgets', () => {
         category: budgetData.category,
         period: budgetData.period || 'MONTHLY',
         startDate: budgetData.startDate ? new Date(budgetData.startDate).toISOString() : new Date().toISOString(),
-        endDate: null, // Will be set by backend
-        spentAmount: 0,
-        remainingAmount: budgetData.amount,
-        isActive: true
-      }
-      
-      try {
-        const response = await axios.post('/budgets', budgetToAdd)
-        
-        if (response.data) {
-          budgets.value.unshift(response.data)
-          return response.data
-        } else {
-          throw new Error('No response data from backend')
-        }
-      } catch (axiosError) {
-        // If it's a network error (backend not available), add to local state
-        if (axiosError.code === 'ERR_NETWORK' || axiosError.message.includes('Network Error')) {
-          console.log('Backend not available, adding budget to local state')
-          const localBudget = {
-            id: Date.now(),
-            name: budgetData.name,
-            amount: budgetData.amount,
-            category: budgetData.category,
-            period: budgetData.period || 'MONTHLY',
-            startDate: budgetData.startDate ? new Date(budgetData.startDate).toISOString() : new Date().toISOString(),
-            endDate: null,
-            spentAmount: 0,
-            remainingAmount: budgetData.amount,
-            isActive: true
-          }
-          budgets.value.unshift(localBudget)
-          return localBudget
-        }
-        throw axiosError
-      }
-    } catch (err) {
-      error.value = err.message
-      console.error('Failed to add budget:', err)
-      
-      // If backend fails, add to local state for demo mode
-      const localBudget = {
-        id: Date.now(),
-        name: budgetData.name,
-        amount: budgetData.amount,
-        category: budgetData.category,
-        period: budgetData.period || 'MONTHLY',
-        startDate: budgetData.startDate ? new Date(budgetData.startDate).toISOString() : new Date().toISOString(),
         endDate: null,
         spentAmount: 0,
         remainingAmount: budgetData.amount,
         isActive: true
       }
-      budgets.value.unshift(localBudget)
-      return localBudget
+
+      const response = await axios.post('/budgets', budgetToAdd)
+
+      if (response.data) {
+        budgets.value.unshift(response.data)
+        return response.data
+      }
+      throw new Error('No response data from backend')
+    } catch (err) {
+      error.value = err.message
+      console.error('Failed to add budget:', err)
+      throw err
     } finally {
       isLoading.value = false
     }
   }
 
-  // Month navigation
   const setCurrentMonth = (month, year) => {
     currentMonth.value = month
     currentYear.value = year
@@ -202,94 +154,18 @@ export const useBudgetsStore = defineStore('budgets', () => {
     }
   }
 
-  // Initialize with demo data if no backend connection
-  const initializeWithDemoData = () => {
-    if (budgets.value.length === 0) {
-      const now = new Date()
-      const currentMonth = now.getMonth()
-      
-      budgets.value = [
-        {
-          id: 1,
-          name: 'Groceries Budget',
-          amount: 500.00,
-          category: 'FOOD_GROCERIES',
-          period: 'MONTHLY',
-          startDate: new Date(now.getFullYear(), currentMonth, 1).toISOString(),
-          endDate: new Date(now.getFullYear(), currentMonth + 1, 1).toISOString(),
-          spentAmount: 320.50,
-          remainingAmount: 179.50,
-          isActive: true
-        },
-        {
-          id: 2,
-          name: 'Entertainment Budget',
-          amount: 200.00,
-          category: 'ENTERTAINMENT',
-          period: 'MONTHLY',
-          startDate: new Date(now.getFullYear(), currentMonth, 1).toISOString(),
-          endDate: new Date(now.getFullYear(), currentMonth + 1, 1).toISOString(),
-          spentAmount: 150.00,
-          remainingAmount: 50.00,
-          isActive: true
-        },
-        {
-          id: 3,
-          name: 'Transportation Budget',
-          amount: 300.00,
-          category: 'TRANSPORTATION',
-          period: 'MONTHLY',
-          startDate: new Date(now.getFullYear(), currentMonth, 1).toISOString(),
-          endDate: new Date(now.getFullYear(), currentMonth + 1, 1).toISOString(),
-          spentAmount: 280.00,
-          remainingAmount: 20.00,
-          isActive: true
-        },
-        {
-          id: 4,
-          name: 'Housing Budget',
-          amount: 1200.00,
-          category: 'HOUSING_RENT',
-          period: 'MONTHLY',
-          startDate: new Date(now.getFullYear(), currentMonth - 1, 1).toISOString(),
-          endDate: new Date(now.getFullYear(), currentMonth, 1).toISOString(),
-          spentAmount: 1200.00,
-          remainingAmount: 0.00,
-          isActive: true
-        },
-        {
-          id: 5,
-          name: 'Healthcare Budget',
-          amount: 150.00,
-          category: 'HEALTHCARE',
-          period: 'MONTHLY',
-          startDate: new Date(now.getFullYear(), currentMonth - 2, 1).toISOString(),
-          endDate: new Date(now.getFullYear(), currentMonth - 1, 1).toISOString(),
-          spentAmount: 120.00,
-          remainingAmount: 30.00,
-          isActive: true
-        }
-      ]
-      isInitialized.value = true
-    }
-  }
-
-  // Force refresh data
   const refreshData = async () => {
     isInitialized.value = false
     await fetchBudgets()
   }
 
   return {
-    // State
     budgets,
     isLoading,
     error,
     isInitialized,
     currentMonth,
     currentYear,
-    
-    // Getters
     totalBudgetAmount,
     totalSpentAmount,
     totalRemainingAmount,
@@ -301,11 +177,8 @@ export const useBudgetsStore = defineStore('budgets', () => {
     currentMonthBudgetAmount,
     currentMonthSpentAmount,
     currentMonthRemainingAmount,
-    
-    // Actions
     fetchBudgets,
     addBudget,
-    initializeWithDemoData,
     refreshData,
     setCurrentMonth,
     goToCurrentMonth,

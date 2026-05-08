@@ -443,16 +443,9 @@ export default {
         if (!budgetsStore.isInitialized) {
           await budgetsStore.fetchBudgets()
         }
-        
-        // If still no data, initialize with demo data
-        if (budgetsStore.budgets.length === 0) {
-          budgetsStore.initializeWithDemoData()
-        }
+
       } catch (error) {
-        // Ensure demo data is loaded if everything fails
-        if (budgetsStore.budgets.length === 0) {
-          budgetsStore.initializeWithDemoData()
-        }
+        console.error('Budgets load error:', error)
       }
     })
 

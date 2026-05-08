@@ -15,10 +15,14 @@
           </div>
           
           <div class="flex items-center space-x-4" style="position: relative; z-index: 100; pointer-events: auto; background: rgba(255,255,255,0.9); padding: 8px; border-radius: 8px;">
-            <router-link to="/dashboard" class="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200 cursor-pointer border border-transparent hover:border-blue-200" style="pointer-events: auto; z-index: 10; background: white; padding: 8px 12px; border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">Dashboard</router-link>
-            <router-link to="/transactions" class="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200 cursor-pointer border border-transparent hover:border-blue-200" style="pointer-events: auto; z-index: 10; background: white; padding: 8px 12px; border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">Transactions</router-link>
-            <router-link to="/budgets" class="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200 cursor-pointer border border-transparent hover:border-blue-200" style="pointer-events: auto; z-index: 10; background: white; padding: 8px 12px; border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">Budgets</router-link>
-            <router-link to="/insights" class="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200 cursor-pointer border border-transparent hover:border-blue-200" style="pointer-events: auto; z-index: 10; background: white; padding: 8px 12px; border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">Financial Insights</router-link>
+            <template v-if="isAuthenticated">
+              <router-link to="/dashboard" class="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200 cursor-pointer border border-transparent hover:border-blue-200" style="pointer-events: auto; z-index: 10; background: white; padding: 8px 12px; border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">Dashboard</router-link>
+              <router-link to="/transactions" class="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200 cursor-pointer border border-transparent hover:border-blue-200" style="pointer-events: auto; z-index: 10; background: white; padding: 8px 12px; border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">Transactions</router-link>
+              <router-link to="/budgets" class="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200 cursor-pointer border border-transparent hover:border-blue-200" style="pointer-events: auto; z-index: 10; background: white; padding: 8px 12px; border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">Budgets</router-link>
+              <router-link to="/insights" class="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200 cursor-pointer border border-transparent hover:border-blue-200" style="pointer-events: auto; z-index: 10; background: white; padding: 8px 12px; border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">Financial Insights</router-link>
+              <router-link to="/settings" class="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200 cursor-pointer border border-transparent hover:border-blue-200" style="pointer-events: auto; z-index: 10; background: white; padding: 8px 12px; border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">Settings</router-link>
+              <router-link to="/profile" class="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200 cursor-pointer border border-transparent hover:border-blue-200" style="pointer-events: auto; z-index: 10; background: white; padding: 8px 12px; border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">Profile</router-link>
+            </template>
 
             <button v-if="!isAuthenticated" @click="showLoginModal = true" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">Login</button>
             <router-link
@@ -76,10 +80,11 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useAuthStore } from './stores/auth'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 
 const authStore = useAuthStore()
 const router = useRouter()
+const route = useRoute()
 
 const showLoginModal = ref(false)
 const showUserMenu = ref(false)
@@ -101,6 +106,8 @@ const login = async () => {
     await authStore.login(loginForm.value.username, loginForm.value.password)
     showLoginModal.value = false
     loginForm.value = { username: '', password: '' }
+    const redirect = typeof route.query.redirect === 'string' ? route.query.redirect : '/dashboard'
+    await router.push(redirect)
   } catch (error) {
     console.error('Login failed:', error)
   }
