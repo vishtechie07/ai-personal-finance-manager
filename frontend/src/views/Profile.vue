@@ -3,8 +3,8 @@
     <div class="bg-white shadow rounded-lg">
       <!-- Profile Header -->
       <div class="px-6 py-4 border-b border-gray-200">
-        <h1 class="text-2xl font-bold text-white">Profile Settings</h1>
-        <p class="text-slate-400 mt-1">Manage your account information and preferences</p>
+        <h1 class="text-2xl font-bold text-slate-900">Profile Settings</h1>
+        <p class="text-slate-600 mt-1">Manage your account information and preferences</p>
       </div>
 
       <!-- Profile Information -->
@@ -14,15 +14,15 @@
             <span class="text-2xl font-bold text-blue-600">{{ userInitials }}</span>
           </div>
           <div>
-            <h2 class="text-xl font-semibold text-white">{{ user?.firstName }} {{ user?.lastName }}</h2>
-            <p class="text-slate-400">{{ user?.email }}</p>
+            <h2 class="text-xl font-semibold text-slate-900">{{ user?.firstName }} {{ user?.lastName }}</h2>
+            <p class="text-slate-600">{{ user?.email }}</p>
             <p class="text-sm text-slate-500">Member since {{ memberSince }}</p>
           </div>
         </div>
 
         <!-- Profile Form -->
         <form @submit.prevent="updateProfile" class="space-y-6">
-          <h3 class="text-lg font-medium text-white">Personal Information</h3>
+          <h3 class="text-lg font-medium text-slate-900">Personal Information</h3>
           
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
@@ -69,10 +69,7 @@
           </div>
 
           <div class="flex justify-end">
-            <button 
-              type="submit" 
-              class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-6 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-            >
+            <button type="submit" class="btn-primary">
               Update Profile
             </button>
           </div>
@@ -81,7 +78,7 @@
         <!-- Change Password -->
         <div class="border-t border-gray-200 pt-8 mt-8">
           <form @submit.prevent="changePassword" class="space-y-6">
-            <h3 class="text-lg font-medium text-white">Change Password</h3>
+            <h3 class="text-lg font-medium text-slate-900">Change Password</h3>
             
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
@@ -116,10 +113,7 @@
             </div>
 
             <div class="flex justify-end">
-              <button 
-                type="submit" 
-                class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-6 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-              >
+              <button type="submit" class="btn-primary">
                 Change Password
               </button>
             </div>
@@ -128,13 +122,10 @@
 
         <!-- Account Actions -->
         <div class="border-t border-gray-200 pt-8 mt-8">
-          <h3 class="text-lg font-medium text-white mb-4">Account Actions</h3>
+          <h3 class="text-lg font-medium text-slate-900 mb-4">Account Actions</h3>
           
           <div class="flex space-x-4">
-            <button 
-              @click="showDeleteConfirm = true" 
-              class="bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-6 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
-            >
+            <button type="button" class="btn-danger" @click="showDeleteConfirm = true">
               Delete Account
             </button>
           </div>
@@ -151,20 +142,14 @@
     <div v-if="showDeleteConfirm" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
       <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
         <div class="mt-3 text-center">
-          <h3 class="text-lg font-medium text-white mb-4">Delete Account</h3>
-          <p class="text-slate-400 mb-6">Are you sure you want to delete your account? This action cannot be undone.</p>
+          <h3 class="text-lg font-medium text-slate-900 mb-4">Delete Account</h3>
+          <p class="text-slate-600 mb-6">Are you sure you want to delete your account? This action cannot be undone.</p>
           
-          <div class="flex space-x-3">
-            <button 
-              @click="deleteAccount" 
-              class="bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-6 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
-            >
+          <div class="flex gap-3 justify-center">
+            <button type="button" class="btn-danger flex-1" @click="deleteAccount">
               Yes, Delete
             </button>
-            <button 
-              @click="showDeleteConfirm = false" 
-              class="bg-gray-300 hover:bg-gray-400 text-white font-medium py-2 px-6 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
-            >
+            <button type="button" class="btn-secondary flex-1" @click="showDeleteConfirm = false">
               Cancel
             </button>
           </div>

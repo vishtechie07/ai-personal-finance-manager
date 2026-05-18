@@ -32,7 +32,7 @@ export const useBudgetsStore = defineStore('budgets', () => {
   const nearLimitBudgets = computed(() => {
     return budgets.value.filter(budget => {
       const percentage = (parseFloat(budget.spentAmount || 0) / parseFloat(budget.amount || 1)) * 100
-      return percentage >= 80 && percentage < 100
+      return percentage >= 70 && percentage < 90
     })
   })
 
@@ -46,7 +46,7 @@ export const useBudgetsStore = defineStore('budgets', () => {
   const currentMonthNearLimitBudgets = computed(() => {
     return budgetsByMonth.value.filter(budget => {
       const percentage = (parseFloat(budget.spentAmount || 0) / parseFloat(budget.amount || 1)) * 100
-      return percentage >= 80 && percentage < 100
+      return percentage >= 70 && percentage < 90
     })
   })
 

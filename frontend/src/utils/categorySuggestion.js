@@ -47,7 +47,7 @@ function keywordBestMatch(description, keywordMap) {
 }
 
 /**
- * Uses OpenAI via backend when the user saved a key; otherwise keyword fallback only.
+ * Uses OpenAI via backend (user key or platform key on Render); otherwise keyword fallback.
  */
 export async function resolveCategory(description, keywordMap) {
   if (!description || description.trim().length < 3) return null

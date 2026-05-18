@@ -1,7 +1,7 @@
 {
-  "name": "personal-finance-manager-frontend",
+  "name": "spendsense-frontend",
   "version": "1.0.0",
-  "description": "Personal Finance Manager Frontend - Track spending and manage budgets",
+  "description": "SpendSense frontend — track spending, manage budgets, and AI insights",
   "scripts": {
     "dev": "vite",
     "build": "vite build",

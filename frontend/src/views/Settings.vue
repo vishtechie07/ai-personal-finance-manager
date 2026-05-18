@@ -3,7 +3,7 @@
     <div class="bg-white shadow rounded-lg">
       <div class="px-6 py-4 border-b border-gray-200">
         <h1 class="text-2xl font-bold text-gray-900">Settings</h1>
-        <p class="text-gray-600 mt-1">Connect OpenAI for smarter category suggestions (stored encrypted on the server).</p>
+        <p class="text-gray-600 mt-1">Optional: add your own OpenAI key, or use SpendSense hosted AI when enabled.</p>
       </div>
 
       <div class="px-6 py-6 space-y-6">
@@ -13,11 +13,16 @@
           <div v-if="message" class="rounded-md bg-green-50 text-green-800 px-4 py-3 text-sm">{{ message }}</div>
           <div v-if="error" class="rounded-md bg-red-50 text-red-800 px-4 py-3 text-sm">{{ error }}</div>
 
+          <div v-if="platformAiEnabled && !hasOpenAiApiKey" class="rounded-md bg-primary-50 text-primary-900 px-4 py-3 text-sm">
+            SpendSense AI is enabled. Category suggestions and receipt scan work without a personal OpenAI key.
+          </div>
+
           <div>
             <p class="text-sm text-gray-700 mb-2">
-              OpenAI API key:
+              Your OpenAI API key:
               <span v-if="hasOpenAiApiKey" class="text-green-700 font-medium ml-1">saved</span>
-              <span v-else class="text-amber-700 font-medium ml-1">not configured — keyword suggestions only</span>
+              <span v-else-if="platformAiEnabled" class="text-primary-700 font-medium ml-1">using SpendSense AI</span>
+              <span v-else class="text-amber-700 font-medium ml-1">not set — keyword suggestions only</span>
             </p>
             <label class="block text-sm font-medium text-gray-700 mb-2">Secret key</label>
             <input
@@ -36,7 +41,7 @@
             <button
               type="button"
               :disabled="saving || !apiKeyInput.trim()"
-              class="bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-medium py-2 px-6 rounded-lg transition-colors"
+              class="btn-primary"
               @click="saveKey"
             >
               {{ saving ? 'Saving…' : 'Save API key' }}
@@ -44,7 +49,7 @@
             <button
               type="button"
               :disabled="saving || !hasOpenAiApiKey"
-              class="bg-gray-200 hover:bg-gray-300 disabled:opacity-50 text-gray-900 font-medium py-2 px-6 rounded-lg transition-colors"
+              class="btn-secondary"
               @click="removeKey"
             >
               Remove key
@@ -63,6 +68,7 @@ import axios from 'axios'
 const loading = ref(true)
 const saving = ref(false)
 const hasOpenAiApiKey = ref(false)
+const platformAiEnabled = ref(false)
 const apiKeyInput = ref('')
 const message = ref('')
 const error = ref('')
@@ -74,6 +80,7 @@ async function load() {
   try {
     const { data } = await axios.get('/settings')
     hasOpenAiApiKey.value = !!data?.hasOpenAiApiKey
+    platformAiEnabled.value = !!data?.platformAiEnabled
   } catch (e) {
     error.value = e.response?.data?.message || 'Failed to load settings.'
   } finally {

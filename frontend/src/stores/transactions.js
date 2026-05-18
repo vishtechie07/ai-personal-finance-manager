@@ -9,66 +9,60 @@ export const useTransactionsStore = defineStore('transactions', () => {
   const isInitialized = ref(false)
   const currentMonth = ref(new Date().getMonth())
   const currentYear = ref(new Date().getFullYear())
+  const filters = ref({ search: '', category: '', type: '', sort: 'dateDesc' })
 
-  const recentTransactions = computed(() => {
-    return transactions.value.slice(0, 5)
-  })
+  const recentTransactions = computed(() => transactions.value.slice(0, 5))
 
-  const totalIncome = computed(() => {
-    return transactions.value
-      .filter(t => t.type === 'INCOME')
-      .reduce((sum, t) => sum + parseFloat(t.amount || 0), 0)
-  })
+  const totalIncome = computed(() =>
+    transactions.value.filter((t) => t.type === 'INCOME').reduce((sum, t) => sum + parseFloat(t.amount || 0), 0)
+  )
 
-  const totalExpenses = computed(() => {
-    return transactions.value
-      .filter(t => t.type === 'EXPENSE')
-      .reduce((sum, t) => sum + parseFloat(t.amount || 0), 0)
-  })
+  const totalExpenses = computed(() =>
+    transactions.value.filter((t) => t.type === 'EXPENSE').reduce((sum, t) => sum + parseFloat(t.amount || 0), 0)
+  )
 
   const totalBalance = computed(() => totalIncome.value - totalExpenses.value)
 
-  const transactionsByMonth = computed(() => {
-    return transactions.value.filter(transaction => {
-      const transactionDate = new Date(transaction.transactionDate)
-      return transactionDate.getMonth() === currentMonth.value &&
-             transactionDate.getFullYear() === currentYear.value
-    })
-  })
+  const transactionsByMonth = computed(() => transactions.value)
 
-  const currentMonthIncome = computed(() => {
-    return transactionsByMonth.value
-      .filter(t => t.type === 'INCOME')
-      .reduce((sum, t) => sum + parseFloat(t.amount || 0), 0)
-  })
+  const currentMonthIncome = computed(() =>
+    transactionsByMonth.value.filter((t) => t.type === 'INCOME').reduce((sum, t) => sum + parseFloat(t.amount || 0), 0)
+  )
 
-  const currentMonthExpenses = computed(() => {
-    return transactionsByMonth.value
-      .filter(t => t.type === 'EXPENSE')
-      .reduce((sum, t) => sum + parseFloat(t.amount || 0), 0)
-  })
+  const currentMonthExpenses = computed(() =>
+    transactionsByMonth.value.filter((t) => t.type === 'EXPENSE').reduce((sum, t) => sum + parseFloat(t.amount || 0), 0)
+  )
 
-  const currentMonthBalance = computed(() => {
-    return currentMonthIncome.value - currentMonthExpenses.value
-  })
+  const currentMonthBalance = computed(() => currentMonthIncome.value - currentMonthExpenses.value)
+
+  const yearMonthParam = () => {
+    const y = currentYear.value
+    const m = String(currentMonth.value + 1).padStart(2, '0')
+    return `${y}-${m}`
+  }
 
   const fetchTransactions = async () => {
-    if (isLoading.value) return
+    await fetchTransactionsForMonth()
+  }
 
+  const fetchTransactionsForMonth = async (override = {}) => {
+    if (isLoading.value) return
     isLoading.value = true
     error.value = null
+    const f = { ...filters.value, ...override }
     try {
-      const response = await axios.get('/transactions')
-
-      if (response.data && Array.isArray(response.data)) {
-        transactions.value = response.data
-        isInitialized.value = true
-      } else {
-        transactions.value = []
-      }
+      const params = new URLSearchParams()
+      if (f.search) params.set('search', f.search)
+      if (f.category) params.set('category', f.category)
+      if (f.type) params.set('type', f.type)
+      if (f.sort) params.set('sort', f.sort)
+      const qs = params.toString()
+      const url = `/transactions/month/${yearMonthParam()}${qs ? `?${qs}` : ''}`
+      const response = await axios.get(url)
+      transactions.value = Array.isArray(response.data) ? response.data : []
+      isInitialized.value = true
     } catch (err) {
       error.value = err.message
-      console.error('Failed to fetch transactions:', err)
       transactions.value = []
     } finally {
       isLoading.value = false
@@ -88,21 +82,40 @@ export const useTransactionsStore = defineStore('transactions', () => {
           ? new Date(transactionData.transactionDate).toISOString()
           : new Date().toISOString()
       }
-
       const response = await axios.post('/transactions', transactionToAdd)
-
       if (response.data) {
-        transactions.value.unshift(response.data)
+        await fetchTransactionsForMonth()
         return response.data
       }
       throw new Error('No response data from backend')
     } catch (err) {
       error.value = err.message
-      console.error('Failed to add transaction:', err)
       throw err
     } finally {
       isLoading.value = false
     }
+  }
+
+  const updateTransaction = async (id, transactionData) => {
+    const payload = {
+      description: transactionData.description,
+      amount: transactionData.amount,
+      type: transactionData.type,
+      category: transactionData.category,
+      transactionDate: new Date(transactionData.transactionDate).toISOString()
+    }
+    const response = await axios.put(`/transactions/${id}`, payload)
+    await fetchTransactionsForMonth()
+    return response.data
+  }
+
+  const deleteTransaction = async (id) => {
+    await axios.delete(`/transactions/${id}`)
+    await fetchTransactionsForMonth()
+  }
+
+  const setFilters = (partial) => {
+    filters.value = { ...filters.value, ...partial }
   }
 
   const setCurrentMonth = (month, year) => {
@@ -136,7 +149,7 @@ export const useTransactionsStore = defineStore('transactions', () => {
 
   const refreshData = async () => {
     isInitialized.value = false
-    await fetchTransactions()
+    await fetchTransactionsForMonth()
   }
 
   return {
@@ -146,6 +159,7 @@ export const useTransactionsStore = defineStore('transactions', () => {
     isInitialized,
     currentMonth,
     currentYear,
+    filters,
     recentTransactions,
     totalIncome,
     totalExpenses,
@@ -155,7 +169,11 @@ export const useTransactionsStore = defineStore('transactions', () => {
     currentMonthExpenses,
     currentMonthBalance,
     fetchTransactions,
+    fetchTransactionsForMonth,
     addTransaction,
+    updateTransaction,
+    deleteTransaction,
+    setFilters,
     refreshData,
     setCurrentMonth,
     goToCurrentMonth,

@@ -10,7 +10,8 @@ const routes = [
   {
     path: '/register',
     name: 'Register',
-    component: () => import('../views/Register.vue')
+    component: () => import('../views/Register.vue'),
+    meta: { guestOnly: true }
   },
   {
     path: '/dashboard',
@@ -28,6 +29,12 @@ const routes = [
     path: '/budgets',
     name: 'Budgets',
     component: () => import('../views/Budgets.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/bills',
+    name: 'Bills',
+    component: () => import('../views/Bills.vue'),
     meta: { requiresAuth: true }
   },
   {
@@ -57,11 +64,17 @@ const router = createRouter({
 })
 
 router.beforeEach(async (to, from, next) => {
+  const authStore = useAuthStore()
+
+  if (to.meta.guestOnly && authStore.isAuthenticated) {
+    next('/dashboard')
+    return
+  }
+
   if (!to.meta.requiresAuth) {
     next()
     return
   }
-  const authStore = useAuthStore()
   if (!authStore.token) {
     next({ path: '/', query: { redirect: to.fullPath } })
     return
