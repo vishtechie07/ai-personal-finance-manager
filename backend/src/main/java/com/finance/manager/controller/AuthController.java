@@ -2,6 +2,7 @@ package com.finance.manager.controller;
 
 import com.finance.manager.model.User;
 import com.finance.manager.repository.UserRepository;
+import com.finance.manager.service.DemoSeedService;
 import com.finance.manager.security.AuthPrincipal;
 import com.finance.manager.security.JwtService;
 import jakarta.validation.Valid;
@@ -28,11 +29,17 @@ public class AuthController {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
+    private final DemoSeedService demoSeedService;
 
-    public AuthController(UserRepository userRepository, PasswordEncoder passwordEncoder, JwtService jwtService) {
+    public AuthController(
+            UserRepository userRepository,
+            PasswordEncoder passwordEncoder,
+            JwtService jwtService,
+            DemoSeedService demoSeedService) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
+        this.demoSeedService = demoSeedService;
     }
 
     @PostMapping("/login")
@@ -90,6 +97,8 @@ public class AuthController {
         user.setRole(User.Role.USER);
 
         User saved = userRepository.save(user);
+        demoSeedService.seedDemoFinancialsIfEmpty(saved);
+
         String token = jwtService.generateToken(saved);
 
         Map<String, Object> body = new HashMap<>();

@@ -5,6 +5,7 @@ import com.finance.manager.model.User;
 import com.finance.manager.repository.BudgetRepository;
 import com.finance.manager.repository.UserRepository;
 import com.finance.manager.service.BudgetService;
+import com.finance.manager.service.BudgetSpentSyncService;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -17,10 +18,15 @@ public class BudgetServiceImpl implements BudgetService {
 
     private final BudgetRepository budgetRepository;
     private final UserRepository userRepository;
+    private final BudgetSpentSyncService budgetSpentSyncService;
 
-    public BudgetServiceImpl(BudgetRepository budgetRepository, UserRepository userRepository) {
+    public BudgetServiceImpl(
+            BudgetRepository budgetRepository,
+            UserRepository userRepository,
+            BudgetSpentSyncService budgetSpentSyncService) {
         this.budgetRepository = budgetRepository;
         this.userRepository = userRepository;
+        this.budgetSpentSyncService = budgetSpentSyncService;
     }
 
     @Override
@@ -52,6 +58,7 @@ public class BudgetServiceImpl implements BudgetService {
 
     @Override
     public List<Budget> getAllBudgets(Long userId) {
+        budgetSpentSyncService.syncForUserCurrentMonth(userId);
         return budgetRepository.findByOwner_Id(userId);
     }
 

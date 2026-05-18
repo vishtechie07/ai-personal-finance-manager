@@ -14,6 +14,14 @@ public interface TransactionService {
 
     List<Transaction> getTransactionsByMonth(Long userId, YearMonth month);
 
+    List<Transaction> searchTransactions(
+            Long userId,
+            YearMonth month,
+            String search,
+            Transaction.Category category,
+            Transaction.TransactionType type,
+            String sort);
+
     List<Transaction> getTransactionsByDateRange(Long userId, LocalDateTime startDate, LocalDateTime endDate);
 
     List<Transaction> getCurrentMonthTransactions(Long userId);

@@ -1,10 +1,22 @@
 app:
   cors:
     allowed-origin-patterns: ${CORS_ALLOWED_ORIGIN_PATTERNS:http://localhost:*,http://127.0.0.1:*}
+  seed:
+    consolidate-legacy-users: ${APP_SEED_CONSOLIDATE_LEGACY_USERS:false}
+  storage:
+    path: ${APP_STORAGE_PATH:/app/uploads}
+    max-file-size: ${APP_STORAGE_MAX_FILE_SIZE:5242880}
+  openai:
+    model: ${OPENAI_MODEL:gpt-4o-mini}
+    api-key: ${OPENAI_API_KEY:}
 
 spring:
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 6MB
   application:
-    name: personal-finance-manager
+    name: spendsense
 
   profiles:
     default: local

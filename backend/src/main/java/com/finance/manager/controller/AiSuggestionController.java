@@ -3,7 +3,7 @@ package com.finance.manager.controller;
 import com.finance.manager.model.Transaction;
 import com.finance.manager.security.AuthPrincipal;
 import com.finance.manager.service.OpenAiCategorySuggestionService;
-import com.finance.manager.service.UserOpenAiSettingsService;
+import com.finance.manager.service.OpenAiKeyResolver;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -19,13 +19,13 @@ import java.util.Optional;
 @RequestMapping("/ai")
 public class AiSuggestionController {
 
-    private final UserOpenAiSettingsService userOpenAiSettingsService;
+    private final OpenAiKeyResolver openAiKeyResolver;
     private final OpenAiCategorySuggestionService openAiCategorySuggestionService;
 
     public AiSuggestionController(
-            UserOpenAiSettingsService userOpenAiSettingsService,
+            OpenAiKeyResolver openAiKeyResolver,
             OpenAiCategorySuggestionService openAiCategorySuggestionService) {
-        this.userOpenAiSettingsService = userOpenAiSettingsService;
+        this.openAiKeyResolver = openAiKeyResolver;
         this.openAiCategorySuggestionService = openAiCategorySuggestionService;
     }
 
@@ -43,19 +43,23 @@ public class AiSuggestionController {
             return ResponseEntity.ok(result);
         }
 
-        Optional<String> apiKeyOpt = userOpenAiSettingsService.getDecryptedApiKey(principal.userId());
-        if (apiKeyOpt.isEmpty()) {
+        Optional<OpenAiKeyResolver.ResolvedKey> resolved =
+                openAiKeyResolver.resolveForUser(principal.userId());
+        if (resolved.isEmpty()) {
             result.put("category", null);
             result.put("source", "no_api_key");
             return ResponseEntity.ok(result);
         }
 
+        OpenAiKeyResolver.ResolvedKey key = resolved.get();
         Optional<Transaction.Category> cat =
-                openAiCategorySuggestionService.suggestCategory(apiKeyOpt.get(), description);
+                openAiCategorySuggestionService.suggestCategory(key.apiKey(), description);
 
         if (cat.isPresent()) {
             result.put("category", cat.get().name());
-            result.put("source", "openai");
+            result.put("source", key.source() == OpenAiKeyResolver.ResolvedKey.Source.PLATFORM
+                    ? "openai_platform"
+                    : "openai");
         } else {
             result.put("category", null);
             result.put("source", "openai_failed");

@@ -13,6 +13,10 @@ import java.util.Optional;
 @Repository
 public interface BudgetRepository extends JpaRepository<Budget, Long> {
 
+    long countByOwner_Id(Long ownerId);
+
+    void deleteByOwner_Id(Long ownerId);
+
     List<Budget> findByOwner_Id(Long ownerId);
 
     @Query("""

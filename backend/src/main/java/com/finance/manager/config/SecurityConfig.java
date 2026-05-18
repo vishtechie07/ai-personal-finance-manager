@@ -44,6 +44,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> {
                     auth.requestMatchers(HttpMethod.OPTIONS, "/**").permitAll();
                     auth.requestMatchers(HttpMethod.POST, "/auth/login", "/auth/register").permitAll();
+                    auth.requestMatchers("/actuator/health", "/actuator/health/**").permitAll();
                     if (localProfile) {
                         auth.requestMatchers("/h2-console/**").permitAll();
                     }

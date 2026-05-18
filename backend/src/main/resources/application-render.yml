@@ -1,9 +1,9 @@
 spring:
   datasource:
-    url: ${DATABASE_URL:${SPRING_DATASOURCE_URL}}
+    url: ${DATABASE_URL:jdbc:postgresql://${DATABASE_HOST}:${DATABASE_PORT:5432}/${DATABASE_NAME}}
     driver-class-name: org.postgresql.Driver
-    username: ${DATABASE_USERNAME:${SPRING_DATASOURCE_USERNAME:${POSTGRES_USER}}}
-    password: ${DATABASE_PASSWORD:${SPRING_DATASOURCE_PASSWORD:${POSTGRES_PASSWORD}}}
+    username: ${DATABASE_USERNAME}
+    password: ${DATABASE_PASSWORD}
 
   jpa:
     hibernate:
@@ -23,7 +23,7 @@ app:
     model: ${OPENAI_MODEL:gpt-4o-mini}
     api-key: ${OPENAI_API_KEY:}
   cors:
-    allowed-origin-patterns: ${CORS_ALLOWED_ORIGIN_PATTERNS:https://*.up.railway.app}
+    allowed-origin-patterns: ${CORS_ALLOWED_ORIGIN_PATTERNS:https://*.onrender.com}
 
 management:
   endpoints:

@@ -38,10 +38,15 @@ public class TransactionController {
     @GetMapping("/month/{yearMonth}")
     public ResponseEntity<List<Transaction>> getTransactionsByMonth(
             @AuthenticationPrincipal AuthPrincipal principal,
-            @PathVariable String yearMonth) {
+            @PathVariable String yearMonth,
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) Transaction.Category category,
+            @RequestParam(required = false) Transaction.TransactionType type,
+            @RequestParam(required = false, defaultValue = "dateDesc") String sort) {
         try {
             YearMonth month = YearMonth.parse(yearMonth);
-            return ResponseEntity.ok(transactionService.getTransactionsByMonth(principal.userId(), month));
+            return ResponseEntity.ok(transactionService.searchTransactions(
+                    principal.userId(), month, search, category, type, sort));
         } catch (Exception e) {
             return ResponseEntity.badRequest().build();
         }

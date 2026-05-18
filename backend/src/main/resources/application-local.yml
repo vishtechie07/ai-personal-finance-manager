@@ -27,3 +27,6 @@ app:
     encryption-key: ${SETTINGS_ENCRYPTION_KEY:local-dev-settings-encryption-key-min-32chars!!}
   openai:
     model: ${OPENAI_MODEL:gpt-4o-mini}
+    api-key: ${OPENAI_API_KEY:}
+  seed:
+    consolidate-legacy-users: true
