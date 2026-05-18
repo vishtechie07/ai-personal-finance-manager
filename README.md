@@ -1,6 +1,6 @@
-# Personal Finance Manager
+# SpendSense
 
-A comprehensive personal finance management application built with Spring Boot (Java) backend and Vue.js frontend. This project helps users track spending, manage budgets, and gain insights into their financial habits through smart categorization and data visualization.
+SpendSense is a personal finance app with a Spring Boot backend and Vue.js frontend. Track spending, manage budgets and bills, and get AI-assisted category suggestions—with optional platform-hosted OpenAI for easy trials on Render.
 
 ## Features
 
@@ -90,6 +90,19 @@ A comprehensive personal finance management application built with Spring Boot (
    - Frontend: http://localhost:3000
    - API Proxy: http://localhost:3000/api (proxies to backend)
 
+### Trial login & sample data
+
+With the **`local`** profile (default for `mvn spring-boot:run`), the API seeds a single trial account and **multi-month** sample transactions and budgets (this month plus the previous two). Users who **register** through the UI get the same sample dataset for their new account.
+
+| Field    | Value            |
+|----------|------------------|
+| Username | `spendsense`     |
+| Password | `TrySpend2026!`  |
+
+Full details: **[docs/DEMO_CREDENTIALS.md](docs/DEMO_CREDENTIALS.md)**
+
+**Postgres / Docker already has old seed users?** With `local`, consolidation defaults to **on**: if the seed user is missing but other users exist, startup **clears all users, transactions, and budgets** and recreates the trial account. You can also set **`APP_SEED_CONSOLIDATE_LEGACY_USERS=true`** once on Railway (or wipe the DB volume), restart, then sign in with the credentials above.
+
 ### Production Build
 
 1. **Build the frontend:**
@@ -100,17 +113,29 @@ A comprehensive personal finance management application built with Spring Boot (
 
 2. **The built files will be in `frontend/dist/`**
 
+### Deploy on Render (recommended)
+
+Step-by-step instructions: **[docs/RENDER_DEPLOY.md](docs/RENDER_DEPLOY.md)**
+
+Quick checklist:
+
+1. Create **PostgreSQL** on Render, then a **Web Service** from this repo (**Docker**, root `Dockerfile`).
+2. Set **port `80`** and health check **`/api/actuator/health`**.
+3. Environment:
+   - `SPRING_PROFILES_ACTIVE=render`
+   - `JWT_SECRET` (≥ 32 characters)
+   - `DATABASE_HOST`, `DATABASE_PORT`, `DATABASE_NAME`, `DATABASE_USERNAME`, `DATABASE_PASSWORD` (from the linked Postgres **Internal** values)
+4. Sign in with **`spendsense`** / **`TrySpend2026!`** after the first deploy (see [docs/DEMO_CREDENTIALS.md](docs/DEMO_CREDENTIALS.md)).
+
+Optional: use **`render.yaml`** (Blueprint) to provision DB + web service. Copy **`.env.example`** → **`.env`** and run **`docker compose up --build`** to test the same stack locally on http://localhost:8080.
+
+### OpenAI (optional)
+
+Hosted trials can use a platform **`OPENAI_API_KEY`**; users may also save their own key in **Settings**. See **[docs/OPENAI.md](docs/OPENAI.md)**.
+
 ### Deploy on Railway (Docker + Postgres)
-1. Deploy using the repository root `Dockerfile` (it serves the Vue app with Nginx and proxies `/api/*` to the Spring Boot backend).
-2. Set:
-   - `SPRING_PROFILES_ACTIVE=railway`
-   - **`JWT_SECRET`** — at least **32 characters** (signing key for access tokens)
-   - Postgres connection variables (`DATABASE_URL` as `jdbc:postgresql://...` without credentials in the URL; plus `DATABASE_USERNAME` / `DATABASE_PASSWORD` or `POSTGRES_*` as configured)
-   - Optional: `JWT_EXPIRATION_MS` (default `86400000`), `CORS_ALLOWED_ORIGIN_PATTERNS` (comma-separated patterns; default allows `https://*.up.railway.app`)
-3. **Networking**: expose the service on port **80** (Nginx); Spring listens on `8081` inside the container.
-4. Result:
-   - Frontend UI served at `/`
-   - Backend API under `/api` (for example: `/api/auth/login`, `/api/auth/register`)
+
+Same Docker image as Render. Set `SPRING_PROFILES_ACTIVE=railway` and `DATABASE_URL=jdbc:postgresql://...` plus credentials. Expose port **80**; health check `/api/actuator/health`. See `application-railway.yml` for variable names.
 
 ## API Endpoints
 
@@ -136,7 +161,7 @@ A comprehensive personal finance management application built with Spring Boot (
 ## Project Structure
 
 ```
-personal-finance-manager/
+spendsense/   # repository folder name may differ
 ├── backend/
 │   ├── src/main/java/com/finance/manager/
 │   │   ├── config/          # Configuration classes
@@ -147,7 +172,8 @@ personal-finance-manager/
 │   └── src/main/resources/
 │       ├── application.yml
 │       ├── application-local.yml
-│       └── application-railway.yml
+│       ├── application-railway.yml
+│       └── application-render.yml
 ├── frontend/
 │   ├── src/
 │   │   ├── assets/         # Static assets

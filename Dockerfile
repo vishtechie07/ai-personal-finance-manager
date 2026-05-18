@@ -20,7 +20,7 @@ RUN mvn -q -DskipTests package
 
 FROM eclipse-temurin:17-jre-alpine
 
-RUN apk add --no-cache nginx
+RUN apk add --no-cache nginx wget
 
 WORKDIR /app
 
@@ -35,7 +35,8 @@ RUN chmod +x /entrypoint.sh
 
 ENV SERVER_PORT=8081
 
-# Production (SPRING_PROFILES_ACTIVE=railway): set JWT_SECRET (≥32 chars), database URLs, CORS if needed.
+# Production: SPRING_PROFILES_ACTIVE=render (or railway), JWT_SECRET (≥32 chars), Postgres vars.
+# Render: expose port 80, health check /api/actuator/health — see docs/RENDER_DEPLOY.md
 
 EXPOSE 80
 CMD ["/entrypoint.sh"]

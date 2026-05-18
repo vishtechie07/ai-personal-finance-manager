@@ -1,0 +1,46 @@
+# Production-like stack for local testing before Render deploy.
+# Usage: copy .env.example to .env, set JWT_SECRET, then: docker compose up --build
+
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: finance
+      POSTGRES_USER: pfm
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
+    ports:
+      - "5432:5432"
+    volumes:
+      - pfm_pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U pfm -d finance"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  app:
+    build: .
+    ports:
+      - "8080:80"
+    env_file:
+      - .env
+    environment:
+      SPRING_PROFILES_ACTIVE: render
+      DATABASE_HOST: db
+      DATABASE_PORT: "5432"
+      DATABASE_NAME: finance
+      DATABASE_USERNAME: pfm
+      DATABASE_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
+      JWT_SECRET: ${JWT_SECRET:-change-me-to-a-secret-at-least-32-characters-long}
+      CORS_ALLOWED_ORIGIN_PATTERNS: "http://localhost:*,http://127.0.0.1:*"
+      APP_STORAGE_PATH: /app/uploads
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+    volumes:
+      - pfm_uploads:/app/uploads
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  pfm_pg_data:
+  pfm_uploads:
