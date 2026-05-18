@@ -1,224 +1,326 @@
 # SpendSense
 
-SpendSense is a personal finance app with a Spring Boot backend and Vue.js frontend. Track spending, manage budgets and bills, and get AI-assisted category suggestions—with optional platform-hosted OpenAI for easy trials on Render.
+**SpendSense** is a full-stack personal finance web app: track income and expenses, manage category budgets and recurring bills, get in-app alerts when budgets run hot or bills are due, and optionally use AI for category suggestions and receipt scanning.
 
-## Features
+Built for solo users and demos. Ships as a **single Docker image** (Vue UI + Spring Boot API + Nginx) with **PostgreSQL** in production and **H2** for local JVM development.
 
-### Core Functionality
-- **User Authentication**: JWT-based login and registration; passwords stored with BCrypt
-- **Transaction Management**: Add, view, update, and delete financial transactions
-- **Budget Management**: Create and monitor budgets for various spending categories
-- **Data Visualization**: Interactive charts and graphs for financial insights
+**Repository:** [github.com/vishtechie07/ai-personal-finance-manager](https://github.com/vishtechie07/ai-personal-finance-manager)
 
-### Smart Features
-- **Intelligent Transaction Categorization**: Automatically suggests spending categories based on transaction descriptions
-- **Spending Pattern Detection**: Identifies unusual spending patterns and provides alerts
-- **Financial Insights**: Generates spending analysis and budget recommendations
+---
 
-## Tech Stack
+## What SpendSense does
 
-### Backend
-- **Java 17** with **Spring Boot 3.2.0**
-- **JWT authentication** (Spring Security) and BCrypt password hashing
-- **Spring Data JPA** with **Hibernate**
-- **H2 Database** (development) / **PostgreSQL** (production ready)
-- **Maven** for dependency management
+| Area | Capability |
+|------|------------|
+| **Accounts** | Register, JWT login, per-user data isolation |
+| **Transactions** | CRUD, monthly views, search/filter/sort, quick-add from dashboard |
+| **Budgets** | Monthly limits by category; spent amount synced from expenses; progress and “attention” on dashboard |
+| **Bills** | Recurring bills, due-soon list, mark paid (optional linked expense) |
+| **Notifications** | In-app bell: budget ≥90% used, bills due within 7 days (sync on demand) |
+| **Receipts** | Attach image/PDF to a transaction; optional OpenAI extraction of amount/date/merchant |
+| **AI** | Category suggestion from description; user API key (encrypted) or platform `OPENAI_API_KEY`; keyword fallback when no key |
+| **Insights** | Charts and summaries computed in the UI from your transaction data |
 
-### Frontend
-- **Vue.js 3** with Composition API
-- **Vue Router** for navigation
-- **Pinia** for state management
-- **Tailwind CSS** for styling
-- **Chart.js** for data visualization
-- **Vite** for build tooling
+New registrations receive the same style of **multi-month sample data** as the seeded trial account (see [docs/DEMO_CREDENTIALS.md](docs/DEMO_CREDENTIALS.md)).
 
-## Prerequisites
+---
 
-- Java 17 or higher
-- Node.js 18 or higher
-- Maven 3.6 or higher
+## Architecture
 
-## Setup Instructions
+Production and local Docker run one container. The browser talks only to **Nginx on port 80**; Nginx serves the Vue build and proxies `/api/*` to Spring Boot on **8081**.
 
-### Backend Setup
+```mermaid
+flowchart TB
+  subgraph Browser
+    UI["Vue 3 SPA\n(Pinia, Vue Router, Chart.js)"]
+  end
 
-1. **Navigate to backend directory:**
-   ```bash
-   cd backend
-   ```
+  subgraph Container["Docker image (Render / docker compose)"]
+    NGX["Nginx :80\nstatic + /api proxy"]
+    API["Spring Boot :8081\ncontext-path /api"]
+    VOL["/app/uploads\nreceipt files"]
+  end
 
-2. **Set environment variables (local):**
-   ```bash
-   # Windows
-   set SPRING_PROFILES_ACTIVE=local
-   
-   # Linux/Mac
-   export SPRING_PROFILES_ACTIVE=local
-   ```
+  subgraph Data
+    PG[("PostgreSQL\nrender / compose")]
+    H2[("H2 in-memory\nlocal profile only")]
+  end
 
-3. **Build and run the application:**
-   ```bash
-   mvn clean install
-   mvn spring-boot:run
-   ```
+  subgraph External
+    OAI["OpenAI API\ngpt-4o-mini"]
+  end
 
-4. **Access the application:**
-   - API: http://localhost:8080/api
-   - H2 Console: http://localhost:8080/api/h2-console
-   - Database URL: `jdbc:h2:mem:financedb`
-   - Username: `sa`
-   - Password: `password`
+  UI -->|"HTTPS same origin"| NGX
+  NGX -->|"/* static"| UI
+  NGX -->|"/api/* + JWT"| API
+  API --> PG
+  API -.->|"SPRING_PROFILES_ACTIVE=local"| H2
+  API --> VOL
+  API -->|"user or platform key"| OAI
+```
 
-### Frontend Setup
+### Request flow (authenticated)
 
-1. **Navigate to frontend directory:**
-   ```bash
-   cd frontend
-   ```
+```mermaid
+sequenceDiagram
+  participant U as User
+  participant V as Vue SPA
+  participant N as Nginx
+  participant S as Spring Boot
+  participant D as PostgreSQL
 
-2. **Install dependencies:**
-   ```bash
-   npm install
-   ```
+  U->>V: Use app (e.g. add transaction)
+  V->>N: GET/POST /api/... Authorization Bearer
+  N->>S: Proxy to :8081
+  S->>S: JWT filter + controller
+  S->>D: JPA read/write
+  S-->>V: JSON
+  V-->>U: Update UI / toasts
+```
 
-3. **Start development server:**
-   ```bash
-   npm run dev
-   ```
+### Backend layout
 
-4. **Access the application:**
-   - Frontend: http://localhost:3000
-   - API Proxy: http://localhost:3000/api (proxies to backend)
+| Layer | Responsibility |
+|-------|----------------|
+| `controller` | REST: auth, transactions, budgets, bills, notifications, receipts, settings, AI |
+| `service` | Business logic, `BudgetSpentSyncService`, `NotificationSyncService`, `OpenAiKeyResolver` |
+| `repository` | Spring Data JPA (+ `TransactionSpecifications` for filters) |
+| `model` | `User`, `Transaction`, `Budget`, `Bill`, `AppNotification`, `ReceiptAttachment` |
+| `config` | Security, JWT, CORS, seed runner, storage paths |
+
+### Spring profiles
+
+| Profile | Database | Typical use |
+|---------|----------|-------------|
+| `local` | H2 | `mvn spring-boot:run`, trial seed + consolidate legacy users |
+| `render` | PostgreSQL env vars | Render, `docker compose` |
+| `railway` | `DATABASE_URL` JDBC | Railway-style hosting |
+
+---
+
+## Features (current)
+
+### Core
+- JWT authentication (BCrypt passwords)
+- Transactions with categories and types (income/expense)
+- Monthly budgets with automatic **spent** sync from expenses
+- Dashboard: summaries, budget health, due bills, quick-add transaction
+
+### Bills & alerts
+- Bill CRUD and **mark paid**
+- Notification sync: high budget usage and upcoming due dates
+- Notification bell with unread count
+
+### AI & receipts
+- **Category suggestion**: `POST /api/ai/suggest-category`
+- **Receipt upload** per transaction; **AI extract** when a key is available
+- Key resolution: user key → platform `OPENAI_API_KEY` → keyword fallback ([docs/OPENAI.md](docs/OPENAI.md))
+
+### UX
+- SpendSense branding, glass-style UI, horizontal action buttons
+- Toast errors for API failures; fixed register page (`<script setup>`)
+
+---
+
+## Tech stack
+
+| Tier | Technologies |
+|------|----------------|
+| **Backend** | Java 17, Spring Boot 3.2, Spring Security (JWT), Spring Data JPA, Maven |
+| **Frontend** | Vue 3, Pinia, Vue Router, Tailwind CSS, Chart.js, Vite |
+| **Data** | H2 (dev), PostgreSQL 16 (prod) |
+| **Deploy** | Multi-stage Dockerfile, Nginx, Render Blueprint (`render.yaml`), Docker Compose |
+
+---
+
+## Quick start
+
+### Option A — Docker (matches Render)
+
+```bash
+cp .env.example .env
+# Set JWT_SECRET (≥32 characters) and optionally OPENAI_API_KEY
+docker compose up --build
+```
+
+Open **http://localhost:8080** and sign in with the [trial account](docs/DEMO_CREDENTIALS.md).
+
+### Option B — Split dev (H2 + Vite)
+
+**Terminal 1 — API**
+
+```bash
+cd backend
+# Windows: set SPRING_PROFILES_ACTIVE=local
+# Linux/macOS: export SPRING_PROFILES_ACTIVE=local
+mvn spring-boot:run
+```
+
+- API: http://localhost:8080/api  
+- H2 console: http://localhost:8080/api/h2-console (`jdbc:h2:mem:financedb`, user `sa`, password `password`)
+
+**Terminal 2 — UI**
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+- App: http://localhost:3000 (Vite proxies `/api` to the backend)
 
 ### Trial login & sample data
 
-With the **`local`** profile (default for `mvn spring-boot:run`), the API seeds a single trial account and **multi-month** sample transactions and budgets (this month plus the previous two). Users who **register** through the UI get the same sample dataset for their new account.
+| Field | Value |
+|-------|--------|
+| Username | `spendsense` |
+| Password | `TrySpend2026!` |
 
-| Field    | Value            |
-|----------|------------------|
-| Username | `spendsense`     |
-| Password | `TrySpend2026!`  |
+Details: **[docs/DEMO_CREDENTIALS.md](docs/DEMO_CREDENTIALS.md)**
 
-Full details: **[docs/DEMO_CREDENTIALS.md](docs/DEMO_CREDENTIALS.md)**
+If an old `demo` user exists in Postgres, wipe the volume (`docker compose down -v`) or set `APP_SEED_CONSOLIDATE_LEGACY_USERS=true` once and redeploy.
 
-**Postgres / Docker already has old seed users?** With `local`, consolidation defaults to **on**: if the seed user is missing but other users exist, startup **clears all users, transactions, and budgets** and recreates the trial account. You can also set **`APP_SEED_CONSOLIDATE_LEGACY_USERS=true`** once on Railway (or wipe the DB volume), restart, then sign in with the credentials above.
+---
 
-### Production Build
+## Deploy
 
-1. **Build the frontend:**
-   ```bash
-   cd frontend
-   npm run build
-   ```
+| Platform | Guide |
+|----------|--------|
+| **Render** (recommended) | [docs/RENDER_DEPLOY.md](docs/RENDER_DEPLOY.md) — port **80**, health **`/api/actuator/health`**, `SPRING_PROFILES_ACTIVE=render` |
+| **Railway** | Same Docker image; profile `railway` + `DATABASE_URL` — see `application-railway.yml` |
+| **Blueprint** | Root `render.yaml` provisions Postgres + web service `spendsense` |
 
-2. **The built files will be in `frontend/dist/`**
+Optional: platform **`OPENAI_API_KEY`** in Render for trials without per-user keys.
 
-### Deploy on Render (recommended)
+---
 
-Step-by-step instructions: **[docs/RENDER_DEPLOY.md](docs/RENDER_DEPLOY.md)**
+## API overview
 
-Quick checklist:
+Base path: `/api`. Authenticated routes require `Authorization: Bearer <token>`.
 
-1. Create **PostgreSQL** on Render, then a **Web Service** from this repo (**Docker**, root `Dockerfile`).
-2. Set **port `80`** and health check **`/api/actuator/health`**.
-3. Environment:
-   - `SPRING_PROFILES_ACTIVE=render`
-   - `JWT_SECRET` (≥ 32 characters)
-   - `DATABASE_HOST`, `DATABASE_PORT`, `DATABASE_NAME`, `DATABASE_USERNAME`, `DATABASE_PASSWORD` (from the linked Postgres **Internal** values)
-4. Sign in with **`spendsense`** / **`TrySpend2026!`** after the first deploy (see [docs/DEMO_CREDENTIALS.md](docs/DEMO_CREDENTIALS.md)).
-
-Optional: use **`render.yaml`** (Blueprint) to provision DB + web service. Copy **`.env.example`** → **`.env`** and run **`docker compose up --build`** to test the same stack locally on http://localhost:8080.
-
-### OpenAI (optional)
-
-Hosted trials can use a platform **`OPENAI_API_KEY`**; users may also save their own key in **Settings**. See **[docs/OPENAI.md](docs/OPENAI.md)**.
-
-### Deploy on Railway (Docker + Postgres)
-
-Same Docker image as Render. Set `SPRING_PROFILES_ACTIVE=railway` and `DATABASE_URL=jdbc:postgresql://...` plus credentials. Expose port **80**; health check `/api/actuator/health`. See `application-railway.yml` for variable names.
-
-## API Endpoints
-
-### Authentication
-- `POST /api/auth/login` - User login
-- `POST /api/auth/register` - User registration
-- `GET /api/auth/me` - Get current user info
+### Auth
+| Method | Path | Description |
+|--------|------|-------------|
+| POST | `/auth/login` | Login |
+| POST | `/auth/register` | Register (+ sample data seed) |
+| GET | `/auth/me` | Current user |
 
 ### Transactions
-- `GET /api/transactions` - Get all transactions
-- `POST /api/transactions` - Create new transaction
-- `PUT /api/transactions/{id}` - Update transaction
-- `DELETE /api/transactions/{id}` - Delete transaction
-- `GET /api/transactions/statistics` - Get transaction statistics
-- `GET /api/transactions/trends` - Get spending trends
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/transactions` | List all |
+| GET | `/transactions/month/{yearMonth}` | Month list (query: search, category, type, sort) |
+| GET | `/transactions/current-month` | Current month |
+| GET | `/transactions/range` | Date range |
+| POST/PUT/DELETE | `/transactions`, `/transactions/{id}` | CRUD |
 
 ### Budgets
-- `GET /api/budgets` - Get all budgets
-- `POST /api/budgets` - Create new budget
-- `PUT /api/budgets/{id}` - Update budget
-- `DELETE /api/budgets/{id}` - Delete budget
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/budgets`, `/budgets/month/{yearMonth}`, `/budgets/current-month` | List |
+| POST/PUT/DELETE | `/budgets`, `/budgets/{id}` | CRUD |
+| PUT | `/budgets/{id}/spent` | Update spent (usually synced automatically) |
 
-## Project Structure
+### Bills
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/bills`, `/bills/due-soon` | List / upcoming |
+| POST/PUT/DELETE | `/bills`, `/bills/{id}` | CRUD |
+| POST | `/bills/{id}/mark-paid` | Mark paid |
+
+### Notifications
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/notifications`, `/notifications/unread-count` | List / count |
+| POST | `/notifications/sync` | Generate from budgets & bills |
+| PATCH | `/notifications/{id}/read` | Mark read |
+| POST | `/notifications/read-all` | Mark all read |
+
+### Receipts & AI
+| Method | Path | Description |
+|--------|------|-------------|
+| POST | `/transactions/{id}/receipt` | Upload receipt |
+| GET/DELETE | `/transactions/{id}/receipt`, `.../meta` | Download / metadata / delete |
+| POST | `/ai/extract-receipt` | AI parse uploaded receipt |
+| POST | `/ai/suggest-category` | Suggest category from description |
+
+### Settings
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/settings` | `hasOpenAiApiKey`, `platformAiEnabled`, `aiAvailable` |
+| PUT/DELETE | `/settings/openai-api-key` | Save or remove user OpenAI key |
+
+Health: `GET /api/actuator/health`
+
+---
+
+## Project structure
 
 ```
-spendsense/   # repository folder name may differ
-├── backend/
-│   ├── src/main/java/com/finance/manager/
-│   │   ├── config/          # Configuration classes
-│   │   ├── controller/      # REST controllers
-│   │   ├── model/          # JPA entities
-│   │   ├── repository/     # Data access layer
-│   │   └── service/        # Business logic
-│   └── src/main/resources/
-│       ├── application.yml
-│       ├── application-local.yml
-│       ├── application-railway.yml
-│       └── application-render.yml
-├── frontend/
-│   ├── src/
-│   │   ├── assets/         # Static assets
-│   │   ├── components/     # Vue components
-│   │   ├── router/         # Vue router configuration
-│   │   ├── stores/         # Pinia stores
-│   │   └── views/          # Page components
-│   ├── public/             # Public assets
-│   └── package.json
+ai-personal-finance-manager/
+├── backend/                 # Spring Boot API
+├── frontend/                # Vue 3 SPA
+├── nginx/default.conf       # Reverse proxy rules
+├── docker/
+│   └── entrypoint.sh        # Starts Spring + Nginx
+├── Dockerfile               # Multi-stage production image
+├── docker-compose.yml       # Local Postgres + app
+├── render.yaml              # Render Blueprint
+├── docs/
+│   ├── RENDER_DEPLOY.md
+│   ├── OPENAI.md
+│   └── DEMO_CREDENTIALS.md
+├── .env.example
 └── README.md
 ```
 
-## Development
+---
 
-### Backend Development
-- The application uses H2 in-memory database for development
-- JPA DDL is set to `create-drop` for easy development
-- Smart categorization uses keyword-based pattern matching
+## Data model
 
-### Frontend Development
-- Vue 3 Composition API for modern Vue development
-- Tailwind CSS for utility-first styling
-- Pinia for state management
-- Vue Router for navigation
-- Chart.js for data visualization
+| Entity | Purpose |
+|--------|---------|
+| **User** | Auth; optional encrypted OpenAI API key |
+| **Transaction** | Amount, category, type, date, description |
+| **Budget** | Category limit and spent for a month |
+| **Bill** | Recurring obligation, due date, paid flag |
+| **AppNotification** | In-app alerts (budget / bill rules) |
+| **ReceiptAttachment** | File metadata linked to a transaction |
 
-## Database Schema
+---
 
-The application uses a simple but effective database design:
-- **Users**: Basic user information and authentication
-- **Transactions**: Financial transactions with categories and amounts
-- **Budgets**: Budget categories with spending limits and tracking
+## Future scope & enhancements
 
-## Contributing
+Planned or natural next steps (not implemented yet):
 
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests if applicable
-5. Submit a pull request
+| Theme | Ideas |
+|-------|--------|
+| **Production hardening** | Rate limits on auth and AI; disable or rotate public trial account; audit logging |
+| **Storage** | S3/R2 for receipts (Render disk is ephemeral); virus scan on uploads |
+| **Finance depth** | Multi-currency, recurring transactions, goals, CSV import/export |
+| **AI** | Smarter insights narrative, anomaly detection, batch categorization |
+| **Notifications** | Email/push (SendGrid, FCM), user preferences per alert type |
+| **Collaboration** | Household accounts, shared budgets |
+| **Mobile** | PWA offline shell or React Native client |
+| **Observability** | Structured logging, metrics, error tracking (e.g. Sentry) |
+| **Testing** | API integration tests, Playwright E2E for critical flows |
+
+Contributions welcome via issues and pull requests.
+
+---
+
+## Documentation
+
+- [Render deployment](docs/RENDER_DEPLOY.md)
+- [OpenAI configuration](docs/OPENAI.md)
+- [Trial / seed credentials](docs/DEMO_CREDENTIALS.md)
+
+---
 
 ## License
 
-This project is licensed under the MIT License.
+MIT License — see repository license file if present.
 
 ## Support
 
-For support and questions, please open an issue in the GitHub repository.
+Open an issue on [GitHub](https://github.com/vishtechie07/ai-personal-finance-manager/issues).
