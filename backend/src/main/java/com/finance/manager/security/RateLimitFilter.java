@@ -1,6 +1,7 @@
 package com.finance.manager.security;
 
 import com.finance.manager.config.AuthProperties;
+import com.finance.manager.util.ClientIpResolver;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -40,8 +41,9 @@ public class RateLimitFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
-        String key = clientKey(request) + ":" + request.getServletPath();
-        if (!allow(key)) {
+        String path = request.getServletPath();
+        String key = ClientIpResolver.resolve(request) + ":" + path;
+        if (!allow(key, maxForPath(path), windowMsForPath(path))) {
             response.setStatus(HttpStatus.TOO_MANY_REQUESTS.value());
             response.setContentType("application/json");
             response.getWriter().write("{\"error\":\"Too many requests. Please try again later.\"}");
@@ -50,11 +52,22 @@ public class RateLimitFilter extends OncePerRequestFilter {
         filterChain.doFilter(request, response);
     }
 
-    private boolean allow(String key) {
-        long now = System.currentTimeMillis();
-        long windowMs = authProperties.getRateLimitWindowSeconds() * 1000L;
-        int max = authProperties.getRateLimitPerWindow();
+    private int maxForPath(String path) {
+        if ("/auth/register".equals(path)) {
+            return authProperties.getRegisterAttemptsPerWindow();
+        }
+        return authProperties.getRateLimitPerWindow();
+    }
 
+    private long windowMsForPath(String path) {
+        if ("/auth/register".equals(path)) {
+            return authProperties.getRegisterAttemptWindowSeconds() * 1000L;
+        }
+        return authProperties.getRateLimitWindowSeconds() * 1000L;
+    }
+
+    private boolean allow(String key, int max, long windowMs) {
+        long now = System.currentTimeMillis();
         Deque<Long> deque = buckets.computeIfAbsent(key, k -> new ArrayDeque<>());
         synchronized (deque) {
             while (!deque.isEmpty() && now - deque.peekFirst() > windowMs) {
@@ -66,13 +79,5 @@ public class RateLimitFilter extends OncePerRequestFilter {
             deque.addLast(now);
             return true;
         }
-    }
-
-    private String clientKey(HttpServletRequest request) {
-        String forwarded = request.getHeader("X-Forwarded-For");
-        if (forwarded != null && !forwarded.isBlank()) {
-            return forwarded.split(",")[0].trim();
-        }
-        return request.getRemoteAddr() != null ? request.getRemoteAddr() : "unknown";
     }
 }

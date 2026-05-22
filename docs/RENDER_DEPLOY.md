@@ -51,8 +51,10 @@ Add these on the Web Service → **Environment**:
 | `CORS_ALLOWED_ORIGIN_PATTERNS` | No | Default: `https://*.onrender.com` |
 | `SETTINGS_ENCRYPTION_KEY` | No | Defaults to `JWT_SECRET`; use a separate value for extra isolation |
 | `APP_SEED_CONSOLIDATE_LEGACY_USERS` | No | Set `true` **once** to wipe legacy users and recreate the seed account (see [DEMO_CREDENTIALS.md](DEMO_CREDENTIALS.md)) |
-| `OPENAI_API_KEY` | No | **Platform OpenAI key** for trials — used when users have not saved their own key in Settings. Set as a **secret** in Render. |
+| `OPENAI_API_KEY` | No | Platform OpenAI key (secret). Only used when `APP_PLATFORM_AI_ENABLED=true`. |
+| `APP_PLATFORM_AI_ENABLED` | No | Default `false` — enable shared platform AI only for controlled demos |
 | `OPENAI_MODEL` | No | Default `gpt-4o-mini` |
+| `APP_MAX_NEW_ACCOUNTS_PER_IP_PER_DAY` | No | Default `5` — limits register + Google new accounts per IP |
 | `GOOGLE_CLIENT_ID` | No | Web OAuth client ID for **Sign in with Google** ([GOOGLE_SIGNIN.md](GOOGLE_SIGNIN.md)) |
 | `APP_SEED_DEMO_ENABLED` | No | Default `false` on Render — set `true` only for shared demo account |
 | `APP_REGISTRATION_ENABLED` | No | Default `true` — set `false` to allow Google-only sign-up |
@@ -74,9 +76,9 @@ Or use the repo **`render.yaml`** blueprint (New → Blueprint) to provision DB 
 
 ## 7. OpenAI / AI features
 
-**Trial-friendly (recommended):** set `OPENAI_API_KEY` in Render environment secrets. New users get AI category suggestions and receipt scan without pasting a key. Your key is never sent to the browser.
+**Production default:** platform AI is **off** (`APP_PLATFORM_AI_ENABLED=false`). Users add their own key in **Settings** (BYOK, encrypted per user).
 
-**Optional BYOK:** users can still add their own key in **Settings** (encrypted per user). User keys take priority over the platform key.
+**Controlled demo:** set `OPENAI_API_KEY` and `APP_PLATFORM_AI_ENABLED=true`. Per-user quotas, 24h account age gate, and trial user `spendsense` cannot use platform AI. See **[docs/OPENAI.md](OPENAI.md)**.
 
 **Without any key:** core app works (transactions, budgets, bills); category UI falls back to keyword matching.
 

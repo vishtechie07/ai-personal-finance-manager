@@ -5,6 +5,9 @@ import com.finance.manager.model.User;
 import com.finance.manager.repository.UserRepository;
 import com.finance.manager.service.DemoSeedService;
 import com.finance.manager.service.GoogleAuthService;
+import com.finance.manager.service.RegistrationAbuseService;
+import com.finance.manager.util.ClientIpResolver;
+import jakarta.servlet.http.HttpServletRequest;
 import com.finance.manager.security.AuthPrincipal;
 import com.finance.manager.security.JwtService;
 import jakarta.validation.Valid;
@@ -23,6 +26,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/auth")
@@ -34,6 +38,7 @@ public class AuthController {
     private final DemoSeedService demoSeedService;
     private final GoogleAuthService googleAuthService;
     private final AuthProperties authProperties;
+    private final RegistrationAbuseService registrationAbuseService;
 
     public AuthController(
             UserRepository userRepository,
@@ -41,13 +46,15 @@ public class AuthController {
             JwtService jwtService,
             DemoSeedService demoSeedService,
             GoogleAuthService googleAuthService,
-            AuthProperties authProperties) {
+            AuthProperties authProperties,
+            RegistrationAbuseService registrationAbuseService) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
         this.demoSeedService = demoSeedService;
         this.googleAuthService = googleAuthService;
         this.authProperties = authProperties;
+        this.registrationAbuseService = registrationAbuseService;
     }
 
     @PostMapping("/login")
@@ -61,8 +68,11 @@ public class AuthController {
     }
 
     @PostMapping("/google")
-    public ResponseEntity<Map<String, Object>> googleSignIn(@RequestBody @Valid GoogleSignInRequest request) {
-        User user = googleAuthService.authenticate(request.credential());
+    public ResponseEntity<Map<String, Object>> googleSignIn(
+            @RequestBody @Valid GoogleSignInRequest request,
+            HttpServletRequest httpRequest) {
+        String clientIp = ClientIpResolver.resolve(httpRequest);
+        User user = googleAuthService.authenticate(request.credential(), clientIp);
         return ResponseEntity.ok(tokenResponse(user));
     }
 
@@ -85,16 +95,29 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<Map<String, Object>> register(@RequestBody @Valid RegisterRequest request) {
+    public ResponseEntity<Map<String, Object>> register(
+            @RequestBody @Valid RegisterRequest request,
+            HttpServletRequest httpRequest) {
         if (!authProperties.isRegistrationEnabled()) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
                     .body(Map.of("error", "Registration is disabled. Sign in with Google instead."));
+        }
+        String clientIp = ClientIpResolver.resolve(httpRequest);
+        Optional<String> validationError = registrationAbuseService.validateRegistration(
+                request.username(), request.email());
+        if (validationError.isPresent()) {
+            return ResponseEntity.badRequest().body(Map.of("error", validationError.get()));
         }
         if (userRepository.existsByUsername(request.username())) {
             return ResponseEntity.badRequest().body(Map.of("error", "Username already exists"));
         }
         if (userRepository.existsByEmail(request.email())) {
             return ResponseEntity.badRequest().body(Map.of("error", "Email already exists"));
+        }
+        Optional<String> ipLimitError = registrationAbuseService.validateNewAccountFromIp(clientIp);
+        if (ipLimitError.isPresent()) {
+            return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+                    .body(Map.of("error", ipLimitError.get()));
         }
 
         User user = new User();

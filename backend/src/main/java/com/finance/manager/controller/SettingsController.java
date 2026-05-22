@@ -1,6 +1,7 @@
 package com.finance.manager.controller;
 
 import com.finance.manager.security.AuthPrincipal;
+import com.finance.manager.service.AiGateService;
 import com.finance.manager.service.OpenAiKeyResolver;
 import com.finance.manager.service.UserOpenAiSettingsService;
 import jakarta.validation.constraints.NotBlank;
@@ -18,22 +19,23 @@ import java.util.Map;
 public class SettingsController {
 
     private final UserOpenAiSettingsService userOpenAiSettingsService;
-    private final OpenAiKeyResolver openAiKeyResolver;
+    private final AiGateService aiGateService;
 
     public SettingsController(
             UserOpenAiSettingsService userOpenAiSettingsService,
-            OpenAiKeyResolver openAiKeyResolver) {
+            OpenAiKeyResolver openAiKeyResolver,
+            AiGateService aiGateService) {
         this.userOpenAiSettingsService = userOpenAiSettingsService;
-        this.openAiKeyResolver = openAiKeyResolver;
+        this.aiGateService = aiGateService;
     }
 
     @GetMapping
     public ResponseEntity<Map<String, Object>> getSettings(@AuthenticationPrincipal AuthPrincipal principal) {
         Map<String, Object> body = new HashMap<>();
         body.put("hasOpenAiApiKey", userOpenAiSettingsService.hasApiKey(principal.userId()));
-        body.put("platformAiEnabled", openAiKeyResolver.isPlatformKeyConfigured());
+        body.put("platformAiEnabled", aiGateService.isPlatformAiConfigured());
         body.put("aiAvailable", userOpenAiSettingsService.hasApiKey(principal.userId())
-                || openAiKeyResolver.isPlatformKeyConfigured());
+                || aiGateService.isPlatformAiConfigured());
         return ResponseEntity.ok(body);
     }
 

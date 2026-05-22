@@ -249,6 +249,16 @@ export async function resolveCategory(description, keywordMap) {
       { timeout: 45000 },
     );
     if (data?.category) return data.category;
+    const limited = [
+      "rate_limited",
+      "platform_disabled",
+      "demo_not_allowed",
+      "account_too_new",
+      "no_api_key",
+    ];
+    if (limited.includes(data?.source)) {
+      return keywordBestMatch(description, keywordMap);
+    }
   } catch (_) {
     /* network / timeout — fall back */
   }

@@ -2,6 +2,7 @@ package com.finance.manager.controller;
 
 import com.finance.manager.model.ReceiptAttachment;
 import com.finance.manager.security.AuthPrincipal;
+import com.finance.manager.service.AiGateService;
 import com.finance.manager.service.OpenAiKeyResolver;
 import com.finance.manager.service.OpenAiReceiptExtractionService;
 import com.finance.manager.service.ReceiptStorageService;
@@ -23,15 +24,15 @@ import java.util.Optional;
 public class ReceiptController {
 
     private final ReceiptStorageService receiptStorageService;
-    private final OpenAiKeyResolver openAiKeyResolver;
+    private final AiGateService aiGateService;
     private final OpenAiReceiptExtractionService receiptExtractionService;
 
     public ReceiptController(
             ReceiptStorageService receiptStorageService,
-            OpenAiKeyResolver openAiKeyResolver,
+            AiGateService aiGateService,
             OpenAiReceiptExtractionService receiptExtractionService) {
         this.receiptStorageService = receiptStorageService;
-        this.openAiKeyResolver = openAiKeyResolver;
+        this.aiGateService = aiGateService;
         this.receiptExtractionService = receiptExtractionService;
     }
 
@@ -84,13 +85,14 @@ public class ReceiptController {
             @AuthenticationPrincipal AuthPrincipal principal,
             @RequestParam("file") MultipartFile file) {
         Map<String, Object> result = new HashMap<>();
-        Optional<OpenAiKeyResolver.ResolvedKey> resolved =
-                openAiKeyResolver.resolveForUser(principal.userId());
-        if (resolved.isEmpty()) {
-            result.put("source", "no_api_key");
+        AiGateService.AccessResult access = aiGateService.evaluate(
+                principal.userId(), principal.username(), AiGateService.Operation.RECEIPT, null);
+        if (access instanceof AiGateService.AccessResult.Denied denied) {
+            result.put("source", denied.source());
             return ResponseEntity.ok(result);
         }
-        OpenAiKeyResolver.ResolvedKey key = resolved.get();
+        OpenAiKeyResolver.ResolvedKey key =
+                ((AiGateService.AccessResult.Allowed) access).key();
         Optional<Map<String, Object>> extracted =
                 receiptExtractionService.extract(key.apiKey(), file);
         if (extracted.isPresent()) {

@@ -2,6 +2,7 @@ package com.finance.manager.controller;
 
 import com.finance.manager.model.Transaction;
 import com.finance.manager.security.AuthPrincipal;
+import com.finance.manager.service.AiGateService;
 import com.finance.manager.service.OpenAiCategorySuggestionService;
 import com.finance.manager.service.OpenAiKeyResolver;
 import org.springframework.http.ResponseEntity;
@@ -19,13 +20,13 @@ import java.util.Optional;
 @RequestMapping("/ai")
 public class AiSuggestionController {
 
-    private final OpenAiKeyResolver openAiKeyResolver;
+    private final AiGateService aiGateService;
     private final OpenAiCategorySuggestionService openAiCategorySuggestionService;
 
     public AiSuggestionController(
-            OpenAiKeyResolver openAiKeyResolver,
+            AiGateService aiGateService,
             OpenAiCategorySuggestionService openAiCategorySuggestionService) {
-        this.openAiKeyResolver = openAiKeyResolver;
+        this.aiGateService = aiGateService;
         this.openAiCategorySuggestionService = openAiCategorySuggestionService;
     }
 
@@ -37,23 +38,26 @@ public class AiSuggestionController {
         String description = body != null ? body.get("description") : null;
         Map<String, Object> result = new HashMap<>();
 
-        if (description == null || description.isBlank()) {
+        Optional<String> normalized = aiGateService.truncateDescription(description);
+        if (normalized.isEmpty()) {
             result.put("category", null);
             result.put("source", "invalid");
             return ResponseEntity.ok(result);
         }
 
-        Optional<OpenAiKeyResolver.ResolvedKey> resolved =
-                openAiKeyResolver.resolveForUser(principal.userId());
-        if (resolved.isEmpty()) {
+        AiGateService.AccessResult access = aiGateService.evaluate(
+                principal.userId(), principal.username(), AiGateService.Operation.CATEGORY, description);
+
+        if (access instanceof AiGateService.AccessResult.Denied denied) {
             result.put("category", null);
-            result.put("source", "no_api_key");
+            result.put("source", denied.source());
             return ResponseEntity.ok(result);
         }
 
-        OpenAiKeyResolver.ResolvedKey key = resolved.get();
+        OpenAiKeyResolver.ResolvedKey key =
+                ((AiGateService.AccessResult.Allowed) access).key();
         Optional<Transaction.Category> cat =
-                openAiCategorySuggestionService.suggestCategory(key.apiKey(), description);
+                openAiCategorySuggestionService.suggestCategory(key.apiKey(), normalized.get());
 
         if (cat.isPresent()) {
             result.put("category", cat.get().name());

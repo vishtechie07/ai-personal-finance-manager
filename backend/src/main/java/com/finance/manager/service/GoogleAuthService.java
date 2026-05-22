@@ -17,18 +17,21 @@ public class GoogleAuthService {
     private final GoogleTokenVerifierService googleTokenVerifierService;
     private final UserRepository userRepository;
     private final DemoSeedService demoSeedService;
+    private final RegistrationAbuseService registrationAbuseService;
 
     public GoogleAuthService(
             GoogleTokenVerifierService googleTokenVerifierService,
             UserRepository userRepository,
-            DemoSeedService demoSeedService) {
+            DemoSeedService demoSeedService,
+            RegistrationAbuseService registrationAbuseService) {
         this.googleTokenVerifierService = googleTokenVerifierService;
         this.userRepository = userRepository;
         this.demoSeedService = demoSeedService;
+        this.registrationAbuseService = registrationAbuseService;
     }
 
     @Transactional
-    public User authenticate(String idToken) {
+    public User authenticate(String idToken, String clientIp) {
         GoogleTokenVerifierService.GoogleProfile profile = googleTokenVerifierService.verify(idToken);
 
         Optional<User> byGoogle = userRepository.findByGoogleSub(profile.sub());
@@ -51,6 +54,11 @@ public class GoogleAuthService {
                 existing.setLastName(profile.familyName());
             }
             return userRepository.save(existing);
+        }
+
+        Optional<String> ipLimit = registrationAbuseService.validateNewAccountFromIp(clientIp);
+        if (ipLimit.isPresent()) {
+            throw new ResponseStatusException(HttpStatus.TOO_MANY_REQUESTS, ipLimit.get());
         }
 
         User user = new User();

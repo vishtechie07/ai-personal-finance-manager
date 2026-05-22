@@ -15,6 +15,19 @@ app:
     registration-enabled: ${APP_REGISTRATION_ENABLED:true}
     rate-limit-per-window: ${APP_RATE_LIMIT_PER_WINDOW:30}
     rate-limit-window-seconds: ${APP_RATE_LIMIT_WINDOW_SECONDS:60}
+    register-attempts-per-window: ${APP_REGISTER_ATTEMPTS_PER_WINDOW:5}
+    register-attempt-window-seconds: ${APP_REGISTER_ATTEMPT_WINDOW_SECONDS:3600}
+    max-new-accounts-per-ip-per-day: ${APP_MAX_NEW_ACCOUNTS_PER_IP_PER_DAY:5}
+  ai:
+    platform-enabled: ${APP_PLATFORM_AI_ENABLED:false}
+    platform-min-account-age-hours: ${APP_PLATFORM_AI_MIN_ACCOUNT_AGE_HOURS:24}
+    block-demo-user-platform-ai: true
+    max-description-length: ${APP_AI_MAX_DESCRIPTION_LENGTH:200}
+    quota-window-seconds: ${APP_AI_QUOTA_WINDOW_SECONDS:3600}
+    user-category-quota-per-window: ${APP_AI_USER_CATEGORY_QUOTA:60}
+    user-receipt-quota-per-window: ${APP_AI_USER_RECEIPT_QUOTA:15}
+    platform-category-quota-per-window: ${APP_AI_PLATFORM_CATEGORY_QUOTA:25}
+    platform-receipt-quota-per-window: ${APP_AI_PLATFORM_RECEIPT_QUOTA:5}
   storage:
     path: ${APP_STORAGE_PATH:/app/uploads}
     max-file-size: ${APP_STORAGE_MAX_FILE_SIZE:5242880}

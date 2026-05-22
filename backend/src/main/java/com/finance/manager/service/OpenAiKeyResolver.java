@@ -1,5 +1,6 @@
 package com.finance.manager.service;
 
+import com.finance.manager.config.AiProperties;
 import com.finance.manager.config.OpenAiProperties;
 import org.springframework.stereotype.Service;
 
@@ -20,16 +21,19 @@ public class OpenAiKeyResolver {
 
     private final UserOpenAiSettingsService userOpenAiSettingsService;
     private final OpenAiProperties openAiProperties;
+    private final AiProperties aiProperties;
 
     public OpenAiKeyResolver(
             UserOpenAiSettingsService userOpenAiSettingsService,
-            OpenAiProperties openAiProperties) {
+            OpenAiProperties openAiProperties,
+            AiProperties aiProperties) {
         this.userOpenAiSettingsService = userOpenAiSettingsService;
         this.openAiProperties = openAiProperties;
+        this.aiProperties = aiProperties;
     }
 
     public boolean isPlatformKeyConfigured() {
-        return openAiProperties.hasPlatformApiKey();
+        return openAiProperties.hasPlatformApiKey() && aiProperties.isPlatformEnabled();
     }
 
     public Optional<ResolvedKey> resolveForUser(Long userId) {
@@ -37,7 +41,7 @@ public class OpenAiKeyResolver {
         if (userKey.isPresent()) {
             return Optional.of(new ResolvedKey(userKey.get(), ResolvedKey.Source.USER));
         }
-        if (openAiProperties.hasPlatformApiKey()) {
+        if (openAiProperties.hasPlatformApiKey() && aiProperties.isPlatformEnabled()) {
             return Optional.of(
                     new ResolvedKey(openAiProperties.getApiKey(), ResolvedKey.Source.PLATFORM));
         }

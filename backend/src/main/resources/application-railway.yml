@@ -28,6 +28,10 @@ app:
     client-id: ${GOOGLE_CLIENT_ID:}
   auth:
     registration-enabled: ${APP_REGISTRATION_ENABLED:true}
+    max-new-accounts-per-ip-per-day: ${APP_MAX_NEW_ACCOUNTS_PER_IP_PER_DAY:5}
+  ai:
+    platform-enabled: ${APP_PLATFORM_AI_ENABLED:false}
+    platform-min-account-age-hours: ${APP_PLATFORM_AI_MIN_ACCOUNT_AGE_HOURS:24}
   seed:
     demo-enabled: ${APP_SEED_DEMO_ENABLED:false}
 
