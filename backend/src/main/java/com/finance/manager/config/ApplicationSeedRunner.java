@@ -78,4 +78,19 @@ public class ApplicationSeedRunner {
             });
         };
     }
+
+    /** Always strip smoke/probe bills left over from local API tests. */
+    @Bean
+    @Order(2)
+    CommandLineRunner purgeSmokeTestBills(UserRepository userRepository, DemoSeedService demoSeedService) {
+        return args -> {
+            for (User user : userRepository.findAll()) {
+                int removed = demoSeedService.purgeSmokeTestBills(user);
+                if (removed > 0) {
+                    System.out.println(
+                            "Removed " + removed + " smoke/probe bill(s) for user '" + user.getUsername() + "'");
+                }
+            }
+        };
+    }
 }

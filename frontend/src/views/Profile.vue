@@ -93,8 +93,11 @@
           </div>
         </form>
 
-        <!-- Change Password -->
-        <div class="border-t border-gray-200 pt-8 mt-8">
+        <!-- Change Password (local accounts only) -->
+        <div
+          v-if="!isGoogleAccount"
+          class="border-t border-gray-200 pt-8 mt-8"
+        >
           <form class="space-y-6" @submit.prevent="changePassword">
             <h3 class="text-lg font-medium text-slate-900">Change Password</h3>
 
@@ -140,6 +143,14 @@
               <button type="submit" class="btn-primary">Change Password</button>
             </div>
           </form>
+        </div>
+
+        <div
+          v-else
+          class="border-t border-gray-200 pt-8 mt-8 rounded-lg bg-slate-50 px-4 py-3 text-sm text-slate-600"
+        >
+          You signed in with Google. Password changes are managed in your Google
+          account.
         </div>
 
         <!-- Account Actions -->
@@ -235,6 +246,10 @@ export default {
 
     const user = computed(() => authStore.user);
 
+    const isGoogleAccount = computed(
+      () => user.value?.authProvider === "GOOGLE",
+    );
+
     const userInitials = computed(() => {
       if (!user.value?.firstName || !user.value?.lastName) return "U";
       return (
@@ -319,6 +334,7 @@ export default {
 
     return {
       user,
+      isGoogleAccount,
       userInitials,
       memberSince,
       profileForm,

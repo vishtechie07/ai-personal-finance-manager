@@ -11,43 +11,67 @@ export const useBillsStore = defineStore("bills", () => {
     isLoading.value = true;
     try {
       const res = await axios.get("/bills");
-      bills.value = res.data || [];
+      bills.value = Array.isArray(res.data) ? res.data : [];
+    } catch (err) {
+      console.warn("Failed to load bills", err);
+      throw err;
     } finally {
       isLoading.value = false;
     }
   };
 
   const fetchDueSoon = async (days = 7) => {
-    const res = await axios.get(`/bills/due-soon?days=${days}`);
-    dueSoon.value = res.data || [];
+    try {
+      const res = await axios.get(`/bills/due-soon?days=${days}`);
+      dueSoon.value = Array.isArray(res.data) ? res.data : [];
+    } catch (err) {
+      console.warn("Failed to load due-soon bills", err);
+      dueSoon.value = [];
+    }
+  };
+
+  const refreshLists = async () => {
+    await Promise.all([fetchBills(), fetchDueSoon()]);
   };
 
   const createBill = async (data) => {
     const res = await axios.post("/bills", data);
-    await fetchBills();
-    await fetchDueSoon();
+    await refreshLists();
     return res.data;
   };
 
   const updateBill = async (id, data) => {
     const res = await axios.put(`/bills/${id}`, data);
-    await fetchBills();
-    await fetchDueSoon();
+    await refreshLists();
     return res.data;
   };
 
   const deleteBill = async (id) => {
     await axios.delete(`/bills/${id}`);
-    await fetchBills();
-    await fetchDueSoon();
+    bills.value = bills.value.filter((b) => b.id !== id);
+    dueSoon.value = dueSoon.value.filter((b) => b.id !== id);
+    try {
+      await refreshLists();
+    } catch {
+      /* mutation succeeded; list will sync on next visit */
+    }
   };
 
   const markPaid = async (id, createTransaction = true) => {
     const res = await axios.post(`/bills/${id}/mark-paid`, {
       createTransaction,
     });
-    await fetchBills();
-    await fetchDueSoon();
+    if (res.data) {
+      const idx = bills.value.findIndex((b) => b.id === id);
+      if (idx >= 0) {
+        bills.value[idx] = res.data;
+      }
+    }
+    try {
+      await refreshLists();
+    } catch {
+      /* keep optimistic row from mark-paid response */
+    }
     return res.data;
   };
 

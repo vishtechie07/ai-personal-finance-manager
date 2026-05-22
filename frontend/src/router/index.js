@@ -62,6 +62,8 @@ const router = createRouter({
   routes,
 });
 
+let authColdStart = true;
+
 router.beforeEach(async (to, from, next) => {
   const authStore = useAuthStore();
 
@@ -78,7 +80,8 @@ router.beforeEach(async (to, from, next) => {
     next({ path: "/", query: { redirect: to.fullPath } });
     return;
   }
-  const ok = await authStore.checkAuth();
+  const ok = await authStore.checkAuth({ coldStart: authColdStart });
+  authColdStart = false;
   if (!ok) {
     next({ path: "/", query: { redirect: to.fullPath } });
     return;

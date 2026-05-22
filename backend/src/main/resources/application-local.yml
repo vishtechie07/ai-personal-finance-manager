@@ -39,6 +39,8 @@ app:
     platform-min-account-age-hours: ${APP_PLATFORM_AI_MIN_ACCOUNT_AGE_HOURS:0}
     platform-category-quota-per-window: ${APP_AI_PLATFORM_CATEGORY_QUOTA:120}
     platform-receipt-quota-per-window: ${APP_AI_PLATFORM_RECEIPT_QUOTA:30}
+    user-monthly-brief-quota-per-window: ${APP_AI_USER_MONTHLY_BRIEF_QUOTA:24}
+    platform-monthly-brief-quota-per-window: ${APP_AI_PLATFORM_MONTHLY_BRIEF_QUOTA:12}
   auth:
     max-new-accounts-per-ip-per-day: ${APP_MAX_NEW_ACCOUNTS_PER_IP_PER_DAY:20}
   google:

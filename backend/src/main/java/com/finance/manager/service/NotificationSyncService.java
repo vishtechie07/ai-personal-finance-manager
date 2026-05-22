@@ -30,18 +30,21 @@ public class NotificationSyncService {
     private final BillRepository billRepository;
     private final UserRepository userRepository;
     private final BudgetSpentSyncService budgetSpentSyncService;
+    private final SpendingAnomalyService spendingAnomalyService;
 
     public NotificationSyncService(
             AppNotificationRepository notificationRepository,
             BudgetRepository budgetRepository,
             BillRepository billRepository,
             UserRepository userRepository,
-            BudgetSpentSyncService budgetSpentSyncService) {
+            BudgetSpentSyncService budgetSpentSyncService,
+            SpendingAnomalyService spendingAnomalyService) {
         this.notificationRepository = notificationRepository;
         this.budgetRepository = budgetRepository;
         this.billRepository = billRepository;
         this.userRepository = userRepository;
         this.budgetSpentSyncService = budgetSpentSyncService;
+        this.spendingAnomalyService = spendingAnomalyService;
     }
 
     @Transactional
@@ -49,6 +52,7 @@ public class NotificationSyncService {
         budgetSpentSyncService.syncForUserCurrentMonth(userId);
         syncBudgetWarnings(userId);
         syncBillDue(userId);
+        spendingAnomalyService.syncForUser(userId);
     }
 
     private void syncBudgetWarnings(Long userId) {

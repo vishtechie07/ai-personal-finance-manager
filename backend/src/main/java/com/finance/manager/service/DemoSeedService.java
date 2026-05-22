@@ -3,6 +3,8 @@ package com.finance.manager.service;
 import com.finance.manager.model.Budget;
 import com.finance.manager.model.Transaction;
 import com.finance.manager.model.User;
+import com.finance.manager.repository.AppNotificationRepository;
+import com.finance.manager.repository.BillRepository;
 import com.finance.manager.repository.BudgetRepository;
 import com.finance.manager.repository.TransactionRepository;
 import org.springframework.stereotype.Service;
@@ -24,10 +26,21 @@ public class DemoSeedService {
 
     private final TransactionRepository transactionRepository;
     private final BudgetRepository budgetRepository;
+    private final BillRepository billRepository;
+    private final AppNotificationRepository notificationRepository;
+    private final ReceiptStorageService receiptStorageService;
 
-    public DemoSeedService(TransactionRepository transactionRepository, BudgetRepository budgetRepository) {
+    public DemoSeedService(
+            TransactionRepository transactionRepository,
+            BudgetRepository budgetRepository,
+            BillRepository billRepository,
+            AppNotificationRepository notificationRepository,
+            ReceiptStorageService receiptStorageService) {
         this.transactionRepository = transactionRepository;
         this.budgetRepository = budgetRepository;
+        this.billRepository = billRepository;
+        this.notificationRepository = notificationRepository;
+        this.receiptStorageService = receiptStorageService;
     }
 
     /**
@@ -42,12 +55,29 @@ public class DemoSeedService {
     }
 
     /**
+     * Removes all financial data for the owner (transactions, budgets, bills, receipts, notifications).
+     */
+    /** Removes bills created by API/smoke scripts (payee names starting with Smoke test / API probe). */
+    @Transactional
+    public int purgeSmokeTestBills(User owner) {
+        return billRepository.deleteSmokeTestBillsByOwnerId(owner.getId());
+    }
+
+    @Transactional
+    public void clearSampleData(User owner) {
+        receiptStorageService.deleteAllForOwner(owner.getId());
+        transactionRepository.deleteByOwner_Id(owner.getId());
+        budgetRepository.deleteByOwner_Id(owner.getId());
+        billRepository.deleteByOwner_Id(owner.getId());
+        notificationRepository.deleteByOwner_Id(owner.getId());
+    }
+
+    /**
      * Replaces all transactions and budgets for the owner, then inserts demo data.
      */
     @Transactional
     public void replaceDemoFinancials(User owner) {
-        transactionRepository.deleteByOwner_Id(owner.getId());
-        budgetRepository.deleteByOwner_Id(owner.getId());
+        clearSampleData(owner);
         seedDemoFinancials(owner);
     }
 

@@ -19,6 +19,7 @@ On Render (`application-render.yml` / `render.yaml`):
 | Trial user blocked | on | (code: `spendsense` cannot use platform AI) |
 | Category quota / hour | 25 (platform), 60 (user key) | `APP_AI_PLATFORM_CATEGORY_QUOTA`, `APP_AI_USER_CATEGORY_QUOTA` |
 | Receipt quota / hour | 5 (platform), 15 (user key) | `APP_AI_PLATFORM_RECEIPT_QUOTA`, `APP_AI_USER_RECEIPT_QUOTA` |
+| Monthly brief quota / hour | 6 (platform), 12 (user key) | `APP_AI_PLATFORM_MONTHLY_BRIEF_QUOTA`, `APP_AI_USER_MONTHLY_BRIEF_QUOTA` |
 | Max description length | 200 chars | `APP_AI_MAX_DESCRIPTION_LENGTH` |
 
 Denied responses use `source` values: `rate_limited`, `platform_disabled`, `demo_not_allowed`, `account_too_new`, `no_api_key`.

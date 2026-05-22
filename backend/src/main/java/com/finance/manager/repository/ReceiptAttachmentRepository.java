@@ -12,4 +12,8 @@ public interface ReceiptAttachmentRepository extends JpaRepository<ReceiptAttach
     Optional<ReceiptAttachment> findByTransaction_IdAndOwner_Id(Long transactionId, Long ownerId);
 
     boolean existsByTransaction_IdAndOwner_Id(Long transactionId, Long ownerId);
+
+    java.util.List<ReceiptAttachment> findByOwner_Id(Long ownerId);
+
+    void deleteByOwner_Id(Long ownerId);
 }

@@ -606,20 +606,6 @@ export default {
       }
     };
 
-    // Watch for name changes to trigger smart suggestion
-    watch(
-      () => newBudget.value.name,
-      (newName) => {
-        if (newName && newName.length >= 3) {
-          // Debounce the suggestion to avoid too many calls
-          setTimeout(() => {
-            suggestCategory(newName);
-          }, 300);
-        }
-        // Don't clear category when name is short - let user keep it
-      },
-    );
-
     // Watch for store month changes to sync local state
     watch(
       [

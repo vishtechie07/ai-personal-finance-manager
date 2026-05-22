@@ -51,7 +51,7 @@ public class AppNotification {
     }
 
     public enum NotificationType {
-        BUDGET_WARNING, BILL_DUE
+        BUDGET_WARNING, BILL_DUE, SPENDING_ALERT
     }
 
     public Long getId() { return id; }

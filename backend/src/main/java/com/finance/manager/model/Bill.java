@@ -1,6 +1,7 @@
 package com.finance.manager.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
@@ -12,6 +13,7 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "bills")
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Bill {
 
     @Id
@@ -37,8 +39,12 @@ public class Bill {
     @Column(name = "paid_at")
     private LocalDateTime paidAt;
 
+    @Column(name = "linked_transaction_id", insertable = false, updatable = false)
+    private Long linkedTransactionId;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "linked_transaction_id")
+    @JsonIgnore
     private Transaction linkedTransaction;
 
     @Column(name = "created_at")
@@ -77,11 +83,10 @@ public class Bill {
     public void setPaidAt(LocalDateTime paidAt) { this.paidAt = paidAt; }
     public Transaction getLinkedTransaction() { return linkedTransaction; }
     public void setLinkedTransaction(Transaction linkedTransaction) { this.linkedTransaction = linkedTransaction; }
-    public Long getLinkedTransactionId() {
-        return linkedTransaction != null ? linkedTransaction.getId() : null;
-    }
+    public Long getLinkedTransactionId() { return linkedTransactionId; }
     public LocalDateTime getCreatedAt() { return createdAt; }
     public LocalDateTime getUpdatedAt() { return updatedAt; }
+    @JsonIgnore
     public User getOwner() { return owner; }
     public void setOwner(User owner) { this.owner = owner; }
 }

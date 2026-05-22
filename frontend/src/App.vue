@@ -1,5 +1,6 @@
 <template>
   <div id="app" class="min-h-screen bg-slate-100">
+    <AppBootOverlay :show="authStore.isBooting" />
     <ToastContainer />
     <nav
       class="w-full sticky top-0 z-50 border-b border-slate-200/90 bg-white/95 backdrop-blur-md shadow-sm transition-all duration-300"
@@ -34,32 +35,27 @@
 
           <div class="flex items-center space-x-2">
             <template v-if="isAuthenticated">
+              <nav class="hidden md:flex items-center space-x-1">
+                <router-link
+                  v-for="link in navLinks"
+                  :key="link.to"
+                  :to="link.to"
+                  class="px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200"
+                  :class="navLinkClass(link.to)"
+                  >{{ link.label }}</router-link
+                >
+              </nav>
               <router-link
-                to="/dashboard"
-                class="text-slate-600 hover:text-primary-700 hover:bg-slate-100 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200"
-                >Dashboard</router-link
+                to="/settings"
+                class="hidden md:inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium transition-colors"
+                :class="aiStatus.chipClass"
+                title="AI settings"
               >
-              <router-link
-                to="/transactions"
-                class="text-slate-600 hover:text-primary-700 hover:bg-slate-100 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200"
-                >Transactions</router-link
-              >
-              <router-link
-                to="/budgets"
-                class="text-slate-600 hover:text-primary-700 hover:bg-slate-100 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200"
-                >Budgets</router-link
-              >
-              <router-link
-                to="/bills"
-                class="text-slate-600 hover:text-primary-700 hover:bg-slate-100 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200"
-                >Bills</router-link
-              >
-              <NotificationBell />
-              <router-link
-                to="/insights"
-                class="text-slate-600 hover:text-primary-700 hover:bg-slate-100 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200"
-                >Insights</router-link
-              >
+                {{ aiStatus.label }}
+              </router-link>
+              <div class="hidden md:block">
+                <NotificationBell />
+              </div>
 
               <!-- User Profile Dropdown / Actions -->
               <div
@@ -145,13 +141,37 @@
     </nav>
 
     <main
-      class="w-full mx-auto px-4 sm:px-6 lg:px-8 py-0"
-      style="margin: 0; padding-top: 80px; padding-bottom: 0"
+      class="w-full mx-auto px-4 sm:px-6 lg:px-8 py-0 pb-20 md:pb-0"
+      style="margin: 0; padding-top: 80px"
     >
       <div class="max-w-7xl mx-auto">
+        <SampleDataBanner v-if="isAuthenticated" />
         <router-view />
       </div>
     </main>
+
+    <nav
+      v-if="isAuthenticated"
+      class="md:hidden fixed bottom-0 inset-x-0 z-40 border-t border-slate-200 bg-white/95 backdrop-blur-md safe-area-pb"
+      aria-label="Mobile navigation"
+    >
+      <div class="grid grid-cols-5 h-14">
+        <router-link
+          v-for="tab in mobileTabs"
+          :key="tab.to"
+          :to="tab.to"
+          class="flex flex-col items-center justify-center gap-0.5 text-[10px] font-medium transition-colors"
+          :class="
+            isActiveRoute(tab.to)
+              ? 'text-primary-600'
+              : 'text-slate-500 hover:text-primary-600'
+          "
+        >
+          <span class="text-base" aria-hidden="true">{{ tab.icon }}</span>
+          <span>{{ tab.label }}</span>
+        </router-link>
+      </div>
+    </nav>
 
     <!-- Login Modal -->
     <div
@@ -251,14 +271,17 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from "vue";
+import { ref, computed, onMounted, watch } from "vue";
 import { useAuthStore } from "./stores/auth";
 import { useRouter, useRoute } from "vue-router";
 import { getApiErrorMessage } from "./utils/apiError";
 import { useToast } from "./composables/useToast";
+import { useAiStatus } from "./composables/useAiStatus";
 import ToastContainer from "./components/ToastContainer.vue";
 import NotificationBell from "./components/NotificationBell.vue";
 import GoogleSignInButton from "./components/GoogleSignInButton.vue";
+import AppBootOverlay from "./components/AppBootOverlay.vue";
+import SampleDataBanner from "./components/SampleDataBanner.vue";
 import { usePublicConfig } from "./composables/usePublicConfig";
 
 const authStore = useAuthStore();
@@ -270,6 +293,35 @@ const showUserMenu = ref(false);
 const loginError = ref(null);
 const toast = useToast();
 const { config: publicConfig, load: loadPublicConfig } = usePublicConfig();
+const aiStatus = useAiStatus();
+
+const navLinks = [
+  { to: "/dashboard", label: "Dashboard" },
+  { to: "/transactions", label: "Transactions" },
+  { to: "/budgets", label: "Budgets" },
+  { to: "/bills", label: "Bills" },
+  { to: "/insights", label: "Insights" },
+];
+
+const mobileTabs = [
+  { to: "/dashboard", label: "Home", icon: "⌂" },
+  { to: "/transactions", label: "Txns", icon: "↕" },
+  { to: "/budgets", label: "Budget", icon: "◎" },
+  { to: "/bills", label: "Bills", icon: "▤" },
+  { to: "/insights", label: "Insights", icon: "◈" },
+];
+
+const isActiveRoute = (path) => {
+  if (path === "/dashboard") {
+    return route.path === "/dashboard";
+  }
+  return route.path === path || route.path.startsWith(`${path}/`);
+};
+
+const navLinkClass = (path) =>
+  isActiveRoute(path)
+    ? "text-primary-700 bg-primary-50 font-semibold"
+    : "text-slate-600 hover:text-primary-700 hover:bg-slate-100";
 
 const loginForm = ref({
   username: "",
@@ -295,7 +347,7 @@ const loginWithGoogle = async (credential) => {
         : "/dashboard";
     await router.push(redirect);
   } catch (error) {
-    loginError.value = getApiErrorMessage(error);
+    loginError.value = getApiErrorMessage(error, { auth: "google" });
     toast.error(loginError.value);
   }
 };
@@ -318,21 +370,33 @@ const login = async () => {
         : "/dashboard";
     await router.push(redirect);
   } catch (error) {
-    loginError.value = getApiErrorMessage(error);
+    loginError.value = getApiErrorMessage(error, { auth: "login" });
     toast.error(loginError.value);
   }
 };
 
 const handleLogout = () => {
+  aiStatus.reset();
   authStore.logout();
   showUserMenu.value = false;
   router.push("/"); // Navigate to home page after logout
 };
 
 // Check if user is already authenticated on app start
+watch(
+  () => authStore.isAuthenticated,
+  (authed) => {
+    if (authed) aiStatus.refresh();
+    else aiStatus.reset();
+  },
+  { immediate: true },
+);
+
 onMounted(() => {
   loadPublicConfig();
-  authStore.checkAuth();
+  if (authStore.token) {
+    authStore.checkAuth({ coldStart: true });
+  }
 });
 </script>
 

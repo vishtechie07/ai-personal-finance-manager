@@ -163,7 +163,7 @@ const onGoogle = async (credential) => {
     toast.success("Signed in with Google!");
     await router.push("/dashboard");
   } catch (e) {
-    error.value = getApiErrorMessage(e);
+    error.value = getApiErrorMessage(e, { auth: "google" });
     toast.error(error.value);
   }
 };
@@ -186,7 +186,7 @@ const onRegister = async () => {
     toast.success("Account created!");
     await router.push("/dashboard");
   } catch (e) {
-    error.value = getApiErrorMessage(e);
+    error.value = getApiErrorMessage(e, { auth: "register" });
     toast.error(error.value);
   }
 };

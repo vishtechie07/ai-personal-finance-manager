@@ -108,8 +108,8 @@ public class BillServiceImpl implements BillService {
             bill.setLinkedTransaction(created);
         }
 
-        Bill saved = billRepository.save(bill);
+        billRepository.save(bill);
         notificationSyncService.syncForUser(userId);
-        return saved;
+        return billRepository.findByIdAndOwner_Id(id, userId).orElse(bill);
     }
 }

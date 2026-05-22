@@ -20,8 +20,11 @@ public class AiProperties {
 
     private int userCategoryQuotaPerWindow = 60;
     private int userReceiptQuotaPerWindow = 15;
+    private int userMonthlyBriefQuotaPerWindow = 12;
+
     private int platformCategoryQuotaPerWindow = 25;
     private int platformReceiptQuotaPerWindow = 5;
+    private int platformMonthlyBriefQuotaPerWindow = 6;
 
     public boolean isPlatformEnabled() {
         return platformEnabled;
@@ -79,6 +82,14 @@ public class AiProperties {
         this.userReceiptQuotaPerWindow = Math.max(1, userReceiptQuotaPerWindow);
     }
 
+    public int getUserMonthlyBriefQuotaPerWindow() {
+        return userMonthlyBriefQuotaPerWindow;
+    }
+
+    public void setUserMonthlyBriefQuotaPerWindow(int userMonthlyBriefQuotaPerWindow) {
+        this.userMonthlyBriefQuotaPerWindow = Math.max(1, userMonthlyBriefQuotaPerWindow);
+    }
+
     public int getPlatformCategoryQuotaPerWindow() {
         return platformCategoryQuotaPerWindow;
     }
@@ -93,5 +104,13 @@ public class AiProperties {
 
     public void setPlatformReceiptQuotaPerWindow(int platformReceiptQuotaPerWindow) {
         this.platformReceiptQuotaPerWindow = Math.max(1, platformReceiptQuotaPerWindow);
+    }
+
+    public int getPlatformMonthlyBriefQuotaPerWindow() {
+        return platformMonthlyBriefQuotaPerWindow;
+    }
+
+    public void setPlatformMonthlyBriefQuotaPerWindow(int platformMonthlyBriefQuotaPerWindow) {
+        this.platformMonthlyBriefQuotaPerWindow = Math.max(1, platformMonthlyBriefQuotaPerWindow);
     }
 }

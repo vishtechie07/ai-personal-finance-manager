@@ -88,6 +88,14 @@ public class ReceiptStorageService {
     }
 
     @Transactional
+    public void deleteAllForOwner(Long userId) {
+        for (ReceiptAttachment attachment : receiptRepository.findByOwner_Id(userId)) {
+            deleteFile(attachment.getStoredFilename());
+        }
+        receiptRepository.deleteByOwner_Id(userId);
+    }
+
+    @Transactional
     public void delete(Long userId, Long transactionId) {
         ReceiptAttachment attachment = receiptRepository.findByTransaction_IdAndOwner_Id(transactionId, userId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Receipt not found"));

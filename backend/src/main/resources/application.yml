@@ -28,6 +28,8 @@ app:
     user-receipt-quota-per-window: ${APP_AI_USER_RECEIPT_QUOTA:15}
     platform-category-quota-per-window: ${APP_AI_PLATFORM_CATEGORY_QUOTA:25}
     platform-receipt-quota-per-window: ${APP_AI_PLATFORM_RECEIPT_QUOTA:5}
+    user-monthly-brief-quota-per-window: ${APP_AI_USER_MONTHLY_BRIEF_QUOTA:12}
+    platform-monthly-brief-quota-per-window: ${APP_AI_PLATFORM_MONTHLY_BRIEF_QUOTA:6}
   storage:
     path: ${APP_STORAGE_PATH:/app/uploads}
     max-file-size: ${APP_STORAGE_MAX_FILE_SIZE:5242880}

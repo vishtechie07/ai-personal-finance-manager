@@ -1,6 +1,7 @@
 import { defineStore } from "pinia";
 import { ref, computed } from "vue";
 import axios from "axios";
+import { markSampleBannerPending } from "../composables/useOnboarding";
 
 axios.defaults.timeout = 10000;
 axios.defaults.baseURL = import.meta.env.VITE_API_URL || "/api";
@@ -9,8 +10,13 @@ export const useAuthStore = defineStore("auth", () => {
   const user = ref(null);
   const token = ref(localStorage.getItem("token") || null);
   const isLoading = ref(false);
+  const isBooting = ref(false);
 
   const isAuthenticated = computed(() => !!token.value);
+
+  function afterAuthSuccess(userData) {
+    if (userData?.id) markSampleBannerPending(userData.id);
+  }
 
   if (token.value) {
     axios.defaults.headers.common["Authorization"] = `Bearer ${token.value}`;
@@ -28,6 +34,7 @@ export const useAuthStore = defineStore("auth", () => {
 
       token.value = authToken;
       user.value = userData;
+      afterAuthSuccess(userData);
 
       localStorage.setItem("token", authToken);
       axios.defaults.headers.common["Authorization"] = `Bearer ${authToken}`;
@@ -45,16 +52,20 @@ export const useAuthStore = defineStore("auth", () => {
     delete axios.defaults.headers.common["Authorization"];
   };
 
-  const checkAuth = async () => {
+  const checkAuth = async (options = {}) => {
     if (!token.value) return false;
 
+    const timeoutMs = options.coldStart ? 90000 : 10000;
+    isBooting.value = !!options.coldStart;
     try {
-      const response = await axios.get("/auth/me");
+      const response = await axios.get("/auth/me", { timeout: timeoutMs });
       user.value = response.data;
       return true;
     } catch {
       logout();
       return false;
+    } finally {
+      isBooting.value = false;
     }
   };
 
@@ -65,6 +76,7 @@ export const useAuthStore = defineStore("auth", () => {
       const { token: authToken, user: userData } = response.data;
       token.value = authToken;
       user.value = userData;
+      afterAuthSuccess(userData);
       localStorage.setItem("token", authToken);
       axios.defaults.headers.common["Authorization"] = `Bearer ${authToken}`;
       return userData;
@@ -81,6 +93,7 @@ export const useAuthStore = defineStore("auth", () => {
 
       token.value = authToken;
       user.value = newUser;
+      afterAuthSuccess(newUser);
 
       localStorage.setItem("token", authToken);
       axios.defaults.headers.common["Authorization"] = `Bearer ${authToken}`;
@@ -95,6 +108,7 @@ export const useAuthStore = defineStore("auth", () => {
     user,
     token,
     isLoading,
+    isBooting,
     isAuthenticated,
     login,
     loginWithGoogle,

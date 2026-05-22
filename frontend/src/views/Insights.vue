@@ -11,6 +11,34 @@
           {{ currentMonthDisplay }}
         </p>
       </div>
+      <button
+        v-if="hasMonthData"
+        type="button"
+        class="btn-primary shrink-0"
+        :disabled="briefLoading"
+        @click="generateBrief"
+      >
+        {{ briefLoading ? "Generating…" : "AI monthly brief" }}
+      </button>
+    </div>
+
+    <div
+      v-if="briefBullets.length || briefRecommendation"
+      class="glass-card p-6 border border-primary-100"
+    >
+      <h3 class="text-lg font-semibold text-slate-900 mb-3">AI monthly brief</h3>
+      <p v-if="briefSource" class="text-xs text-slate-500 mb-3">
+        Source: {{ briefSourceLabel }}
+      </p>
+      <ul v-if="briefBullets.length" class="list-disc list-inside space-y-2 text-slate-700">
+        <li v-for="(b, i) in briefBullets" :key="i">{{ b }}</li>
+      </ul>
+      <p
+        v-if="briefRecommendation"
+        class="mt-4 text-sm text-primary-900 bg-primary-50 rounded-lg px-4 py-3 border border-primary-100"
+      >
+        <span class="font-semibold">Tip:</span> {{ briefRecommendation }}
+      </p>
     </div>
 
     <!-- Month Selector -->
@@ -72,8 +100,27 @@
       </div>
     </div>
 
+    <div
+      v-if="!hasMonthData"
+      class="glass-card p-8 text-center text-slate-600"
+    >
+      <p class="text-lg font-semibold text-slate-900 mb-2">
+        No data for {{ currentMonthDisplay }}
+      </p>
+      <p class="text-sm max-w-md mx-auto">
+        Add transactions or switch to a month with activity to see spending
+        patterns, budget alerts, and savings tips.
+      </p>
+      <router-link to="/transactions" class="btn-primary inline-flex mt-4">
+        Add a transaction
+      </router-link>
+    </div>
+
     <!-- Smart Insights Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div
+      v-else
+      class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+    >
       <!-- Spending Pattern Analysis -->
       <div class="glass-card p-6">
         <div class="flex items-center mb-4">
@@ -304,14 +351,23 @@
 
 <script>
 import { ref, computed, watch, onMounted } from "vue";
+import axios from "axios";
 import { useTransactionsStore } from "../stores/transactions";
 import { useBudgetsStore } from "../stores/budgets";
+import { getApiErrorMessage } from "../utils/apiError";
+import { useToast } from "../composables/useToast";
 
 export default {
   name: "Insights",
   setup() {
     const transactionsStore = useTransactionsStore();
     const budgetsStore = useBudgetsStore();
+    const toast = useToast();
+
+    const briefLoading = ref(false);
+    const briefBullets = ref([]);
+    const briefRecommendation = ref("");
+    const briefSource = ref("");
 
     // Initialize month state from store or current date
     const currentMonth = ref(
@@ -341,6 +397,46 @@ export default {
       ];
       return `${monthNames[currentMonth.value]} ${currentYear.value}`;
     });
+
+    const hasMonthData = computed(() => {
+      const txs = transactionsStore?.transactionsByMonth || [];
+      const budgets = budgetsStore?.budgetsByMonth || [];
+      return txs.length > 0 || budgets.length > 0;
+    });
+
+    const yearMonthParam = computed(() => {
+      const m = String(currentMonth.value + 1).padStart(2, "0");
+      return `${currentYear.value}-${m}`;
+    });
+
+    const briefSourceLabel = computed(() => {
+      const s = briefSource.value;
+      if (s === "openai" || s === "openai_platform") return "SpendSense AI";
+      if (s === "no_api_key") return "No API key — summary only";
+      if (s === "rate_limited") return "Rate limited";
+      return s || "—";
+    });
+
+    const generateBrief = async () => {
+      briefLoading.value = true;
+      try {
+        const { data } = await axios.post("/ai/monthly-brief", {
+          yearMonth: yearMonthParam.value,
+        });
+        briefBullets.value = Array.isArray(data?.bullets) ? data.bullets : [];
+        briefRecommendation.value = data?.recommendation || "";
+        briefSource.value = data?.source || "";
+        if (data?.source?.startsWith("openai")) {
+          toast.success("Monthly brief generated");
+        } else if (data?.source === "no_api_key") {
+          toast.error("Add an OpenAI key in Settings to generate an AI brief.");
+        }
+      } catch (e) {
+        toast.error(getApiErrorMessage(e));
+      } finally {
+        briefLoading.value = false;
+      }
+    };
 
     // Month navigation methods
     const previousMonth = () => {
@@ -535,6 +631,12 @@ export default {
     });
 
     // Watch for store month changes to sync local state
+    watch(yearMonthParam, () => {
+      briefBullets.value = [];
+      briefRecommendation.value = "";
+      briefSource.value = "";
+    });
+
     watch(
       [
         () => transactionsStore?.currentMonth,
@@ -610,6 +712,13 @@ export default {
       currentMonth,
       currentYear,
       currentMonthDisplay,
+      hasMonthData,
+      briefLoading,
+      briefBullets,
+      briefRecommendation,
+      briefSource,
+      briefSourceLabel,
+      generateBrief,
       lastUpdated,
       previousMonth,
       nextMonth,

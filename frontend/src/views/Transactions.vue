@@ -182,12 +182,22 @@
             class="input-field w-full"
             required
           />
-          <input
-            v-model="form.category"
-            class="input-field w-full"
-            placeholder="Category"
-            required
-          />
+          <div class="space-y-2">
+            <input
+              v-model="form.category"
+              class="input-field w-full"
+              placeholder="Category"
+              required
+            />
+            <button
+              v-if="form.description && form.description.length > 2"
+              type="button"
+              class="text-xs text-primary-600 hover:text-primary-700 font-medium"
+              @click="suggestCategoryForForm"
+            >
+              Suggest category from description
+            </button>
+          </div>
           <div v-if="editingId" class="space-y-2 border-t pt-3">
             <label class="text-sm font-medium text-slate-700">Receipt</label>
             <input
@@ -392,6 +402,19 @@ const uploadReceipt = async (txId) => {
   const fd = new FormData();
   fd.append("file", receiptFile.value);
   await axios.post(`/transactions/${txId}/receipt`, fd);
+};
+
+const suggestCategoryForForm = async () => {
+  const cat = await resolveCategory(
+    form.value.description,
+    TRANSACTION_KEYWORDS,
+  );
+  if (cat) {
+    form.value.category = cat;
+    toast.success(`Suggested: ${cat}`);
+  } else {
+    toast.error("No match — try a clearer description or pick a category.");
+  }
 };
 
 const save = async () => {

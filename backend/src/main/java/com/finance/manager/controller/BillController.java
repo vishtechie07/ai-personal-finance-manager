@@ -3,10 +3,13 @@ package com.finance.manager.controller;
 import com.finance.manager.model.Bill;
 import com.finance.manager.security.AuthPrincipal;
 import com.finance.manager.service.BillService;
+import com.finance.manager.service.RecurringBillDetectionService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -15,14 +18,33 @@ import java.util.Map;
 public class BillController {
 
     private final BillService billService;
+    private final RecurringBillDetectionService recurringBillDetectionService;
 
-    public BillController(BillService billService) {
+    public BillController(BillService billService, RecurringBillDetectionService recurringBillDetectionService) {
         this.billService = billService;
+        this.recurringBillDetectionService = recurringBillDetectionService;
     }
 
     @GetMapping
     public ResponseEntity<List<Bill>> list(@AuthenticationPrincipal AuthPrincipal principal) {
         return ResponseEntity.ok(billService.getAllBills(principal.userId()));
+    }
+
+    @GetMapping("/detect-recurring")
+    public ResponseEntity<List<Map<String, Object>>> detectRecurring(
+            @AuthenticationPrincipal AuthPrincipal principal) {
+        List<Map<String, Object>> rows = new ArrayList<>();
+        for (RecurringBillDetectionService.RecurringSuggestion s :
+                recurringBillDetectionService.detect(principal.userId())) {
+            Map<String, Object> row = new HashMap<>();
+            row.put("payeeName", s.payeeName());
+            row.put("amount", s.amount());
+            row.put("suggestedDueDate", s.suggestedDueDate().toString());
+            row.put("occurrenceCount", s.occurrenceCount());
+            row.put("merchantKey", s.merchantKey());
+            rows.add(row);
+        }
+        return ResponseEntity.ok(rows);
     }
 
     @GetMapping("/due-soon")

@@ -32,6 +32,8 @@ app:
   ai:
     platform-enabled: ${APP_PLATFORM_AI_ENABLED:false}
     platform-min-account-age-hours: ${APP_PLATFORM_AI_MIN_ACCOUNT_AGE_HOURS:24}
+    user-monthly-brief-quota-per-window: ${APP_AI_USER_MONTHLY_BRIEF_QUOTA:12}
+    platform-monthly-brief-quota-per-window: ${APP_AI_PLATFORM_MONTHLY_BRIEF_QUOTA:6}
   seed:
     demo-enabled: ${APP_SEED_DEMO_ENABLED:false}
 

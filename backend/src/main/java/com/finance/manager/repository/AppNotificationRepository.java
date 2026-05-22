@@ -27,4 +27,6 @@ public interface AppNotificationRepository extends JpaRepository<AppNotification
             AppNotification.NotificationType type,
             String referenceType,
             Long referenceId);
+
+    void deleteByOwner_Id(Long ownerId);
 }

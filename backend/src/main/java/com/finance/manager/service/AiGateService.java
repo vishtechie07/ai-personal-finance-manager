@@ -17,7 +17,8 @@ public class AiGateService {
 
     public enum Operation {
         CATEGORY,
-        RECEIPT
+        RECEIPT,
+        MONTHLY_BRIEF
     }
 
     public sealed interface AccessResult permits AccessResult.Allowed, AccessResult.Denied {
@@ -124,12 +125,16 @@ public class AiGateService {
 
     private int quotaLimit(Operation operation, boolean platform) {
         if (platform) {
-            return operation == Operation.CATEGORY
-                    ? aiProperties.getPlatformCategoryQuotaPerWindow()
-                    : aiProperties.getPlatformReceiptQuotaPerWindow();
+            return switch (operation) {
+                case CATEGORY -> aiProperties.getPlatformCategoryQuotaPerWindow();
+                case RECEIPT -> aiProperties.getPlatformReceiptQuotaPerWindow();
+                case MONTHLY_BRIEF -> aiProperties.getPlatformMonthlyBriefQuotaPerWindow();
+            };
         }
-        return operation == Operation.CATEGORY
-                ? aiProperties.getUserCategoryQuotaPerWindow()
-                : aiProperties.getUserReceiptQuotaPerWindow();
+        return switch (operation) {
+            case CATEGORY -> aiProperties.getUserCategoryQuotaPerWindow();
+            case RECEIPT -> aiProperties.getUserReceiptQuotaPerWindow();
+            case MONTHLY_BRIEF -> aiProperties.getUserMonthlyBriefQuotaPerWindow();
+        };
     }
 }

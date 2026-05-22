@@ -382,8 +382,9 @@
         <h3 class="text-lg font-semibold text-slate-900">
           Spending by Category - {{ currentMonthDisplay }}
         </h3>
-        <div style="height: 300px; position: relative; border: 1px dashed #ccc">
+        <div style="height: 300px; position: relative">
           <canvas
+            v-show="hasCategoryChartData"
             ref="categoryChart"
             style="
               max-height: 300px;
@@ -393,10 +394,13 @@
             "
           ></canvas>
           <div
-            v-if="!categoryChart"
-            class="absolute inset-0 flex items-center justify-center text-gray-400"
+            v-if="!hasCategoryChartData"
+            class="absolute inset-0 flex flex-col items-center justify-center text-center text-slate-500 px-4"
           >
-            Chart loading...
+            <p class="font-medium text-slate-700">No spending this month</p>
+            <p class="text-sm mt-1">
+              Add an expense or pick another month to see the chart.
+            </p>
           </div>
         </div>
       </div>
@@ -405,8 +409,9 @@
         <h3 class="text-lg font-semibold text-slate-900">
           Monthly Overview - Last 6 Months
         </h3>
-        <div style="height: 300px; position: relative; border: 1px dashed #ccc">
+        <div style="height: 300px; position: relative">
           <canvas
+            v-show="hasMonthlyChartData"
             ref="monthlyChart"
             style="
               max-height: 300px;
@@ -416,10 +421,13 @@
             "
           ></canvas>
           <div
-            v-if="!monthlyChart"
-            class="absolute inset-0 flex items-center justify-center text-gray-400"
+            v-if="!hasMonthlyChartData"
+            class="absolute inset-0 flex flex-col items-center justify-center text-center text-slate-500 px-4"
           >
-            Chart loading...
+            <p class="font-medium text-slate-700">Not enough history yet</p>
+            <p class="text-sm mt-1">
+              Add transactions across a few months to see trends.
+            </p>
           </div>
         </div>
       </div>
@@ -1028,6 +1036,16 @@ export default {
       return transactionsStore.transactionsByMonth || [];
     });
 
+    const hasCategoryChartData = computed(() =>
+      currentMonthTransactions.value.some((t) => t.type === "EXPENSE"),
+    );
+
+    const hasMonthlyChartData = computed(() =>
+      (transactionsStore?.transactions || []).some(
+        (t) => t.type === "EXPENSE" || t.type === "INCOME",
+      ),
+    );
+
     const currentMonthBudgets = computed(() => {
       if (!budgetsStore) return [];
       return budgetsStore.budgetsByMonth || [];
@@ -1186,20 +1204,6 @@ export default {
       if (cat) newTransaction.value.category = cat;
     };
 
-    // Watch for description changes to trigger smart suggestion
-    watch(
-      () => newTransaction.value.description,
-      (newDescription, _oldDescription) => {
-        if (newDescription && newDescription.length >= 3) {
-          // Debounce the suggestion to avoid too many calls
-          setTimeout(() => {
-            suggestCategory(newDescription);
-          }, 300);
-        }
-        // Don't clear category when description is short - let user keep it
-      },
-    );
-
     const suggestBudgetCategory = async (budgetName) => {
       if (!budgetName || budgetName.trim().length < 3) return;
       isBudgetSmartSuggested.value = false;
@@ -1211,24 +1215,6 @@ export default {
         newBudget.value.category = "Uncategorized";
       }
     };
-
-    // Watch for budget name changes to trigger smart suggestions
-    watch(
-      () => newBudget.value.name,
-      (newName) => {
-        if (newName && newName.trim().length >= 3) {
-          // Debounce the smart suggestion
-          if (budgetSuggestionTimeout.value) {
-            clearTimeout(budgetSuggestionTimeout.value);
-          }
-          budgetSuggestionTimeout.value = setTimeout(() => {
-            suggestBudgetCategory(newName);
-          }, 500);
-        } else {
-          isBudgetSmartSuggested.value = false;
-        }
-      },
-    );
 
     const addBudget = async () => {
       if (!budgetsStore) {
@@ -1744,6 +1730,8 @@ export default {
       addBudget,
       categoryChart,
       monthlyChart,
+      hasCategoryChartData,
+      hasMonthlyChartData,
       showSuccessMessage,
       successMessage,
       isSmartSuggested,

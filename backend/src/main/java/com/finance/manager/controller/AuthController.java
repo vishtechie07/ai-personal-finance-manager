@@ -18,6 +18,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -91,6 +92,21 @@ public class AuthController {
         }
         return userRepository.findById(principal.userId())
                 .map(user -> ResponseEntity.ok(toUserInfo(user)))
+                .orElseGet(() -> ResponseEntity.status(HttpStatus.UNAUTHORIZED).build());
+    }
+
+    @DeleteMapping("/me/sample-data")
+    public ResponseEntity<Map<String, Object>> clearSampleData(@AuthenticationPrincipal AuthPrincipal principal) {
+        if (principal == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        return userRepository.findById(principal.userId())
+                .map(user -> {
+                    demoSeedService.clearSampleData(user);
+                    Map<String, Object> body = new HashMap<>();
+                    body.put("cleared", true);
+                    return ResponseEntity.ok(body);
+                })
                 .orElseGet(() -> ResponseEntity.status(HttpStatus.UNAUTHORIZED).build());
     }
 

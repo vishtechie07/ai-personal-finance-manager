@@ -17,10 +17,18 @@ axios.interceptors.response.use(
   (error) => {
     console.warn("API request failed:", error.message);
     if (error.response?.status === 401) {
-      const authStore = useAuthStore();
-      authStore.logout();
-      if (router.currentRoute.value?.meta?.requiresAuth) {
-        router.push("/");
+      const url = String(error.config?.url ?? "");
+      const authRoute =
+        url.includes("/auth/me") ||
+        url.includes("/auth/login") ||
+        url.includes("/auth/register") ||
+        url.includes("/auth/google");
+      if (authRoute) {
+        const authStore = useAuthStore();
+        authStore.logout();
+        if (router.currentRoute.value?.meta?.requiresAuth) {
+          router.push("/");
+        }
       }
     }
     return Promise.reject(error);
