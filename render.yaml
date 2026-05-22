@@ -44,3 +44,7 @@ services:
         value: https://*.onrender.com
       - key: OPENAI_API_KEY
         sync: false
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: APP_SEED_DEMO_ENABLED
+        value: "false"

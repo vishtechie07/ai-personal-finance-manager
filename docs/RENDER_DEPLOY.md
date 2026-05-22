@@ -53,6 +53,9 @@ Add these on the Web Service → **Environment**:
 | `APP_SEED_CONSOLIDATE_LEGACY_USERS` | No | Set `true` **once** to wipe legacy users and recreate the seed account (see [DEMO_CREDENTIALS.md](DEMO_CREDENTIALS.md)) |
 | `OPENAI_API_KEY` | No | **Platform OpenAI key** for trials — used when users have not saved their own key in Settings. Set as a **secret** in Render. |
 | `OPENAI_MODEL` | No | Default `gpt-4o-mini` |
+| `GOOGLE_CLIENT_ID` | No | Web OAuth client ID for **Sign in with Google** ([GOOGLE_SIGNIN.md](GOOGLE_SIGNIN.md)) |
+| `APP_SEED_DEMO_ENABLED` | No | Default `false` on Render — set `true` only for shared demo account |
+| `APP_REGISTRATION_ENABLED` | No | Default `true` — set `false` to allow Google-only sign-up |
 
 **Alternative (JDBC URL):** use profile `railway` instead and set `DATABASE_URL=jdbc:postgresql://HOST:5432/DBNAME` plus `DATABASE_USERNAME` / `DATABASE_PASSWORD`.
 

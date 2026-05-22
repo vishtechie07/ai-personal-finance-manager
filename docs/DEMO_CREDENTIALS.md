@@ -1,6 +1,8 @@
 # SpendSense — trial / seed account
 
-On first startup (empty database), the API creates a **seed user** with sample transactions and budgets (current month plus the previous two).
+On first startup (empty database), the API can create a **seed user** with sample transactions and budgets (current month plus the previous two).
+
+**Render / production:** seeding is **off by default** (`APP_SEED_DEMO_ENABLED=false`). Set `APP_SEED_DEMO_ENABLED=true` only for controlled demos.
 
 | Field | Value |
 |-------|--------|
