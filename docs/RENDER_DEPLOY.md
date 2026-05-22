@@ -69,6 +69,8 @@ Or use the repo **`render.yaml`** blueprint (New → Blueprint) to provision DB 
 
 ## 6. Deploy and verify
 
+On startup, **Flyway** applies SQL migrations to Postgres (Google auth columns, etc.). See **[DATABASE_MIGRATIONS.md](DATABASE_MIGRATIONS.md)**. Check deploy logs for `Successfully applied` / `Flyway`.
+
 1. **Create Web Service** / **Deploy**
 2. Open `https://<your-service>.onrender.com`
 3. Sign in: **`spendsense`** / **`TrySpend2026!`** (seeded on first startup — [DEMO_CREDENTIALS.md](DEMO_CREDENTIALS.md))

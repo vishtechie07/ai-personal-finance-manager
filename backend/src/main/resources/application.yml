@@ -43,6 +43,12 @@ spring:
   application:
     name: spendsense
 
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+    baseline-version: 0
+
   profiles:
     default: local
 
