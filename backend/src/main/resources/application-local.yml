@@ -29,4 +29,7 @@ app:
     model: ${OPENAI_MODEL:gpt-4o-mini}
     api-key: ${OPENAI_API_KEY:}
   seed:
+    demo-enabled: true
     consolidate-legacy-users: true
+  google:
+    client-id: ${GOOGLE_CLIENT_ID:}

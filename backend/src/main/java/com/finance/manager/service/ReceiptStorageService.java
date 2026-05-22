@@ -18,14 +18,11 @@ import org.springframework.web.server.ResponseStatusException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Set;
+import com.finance.manager.util.UploadFileValidator;
 import java.util.UUID;
 
 @Service
 public class ReceiptStorageService {
-
-    private static final Set<String> ALLOWED_TYPES = Set.of(
-            "image/jpeg", "image/png", "image/webp", "image/gif", "application/pdf");
 
     private final StorageProperties storageProperties;
     private final ReceiptAttachmentRepository receiptRepository;
@@ -45,16 +42,10 @@ public class ReceiptStorageService {
 
     @Transactional
     public ReceiptAttachment upload(Long userId, Long transactionId, MultipartFile file) throws IOException {
-        if (file == null || file.isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "File is required");
-        }
-        if (file.getSize() > storageProperties.getMaxFileSize()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "File too large");
-        }
-        String contentType = file.getContentType();
-        if (contentType == null || !ALLOWED_TYPES.contains(contentType)) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Unsupported file type");
-        }
+        UploadFileValidator.validateReceiptFile(file, storageProperties.getMaxFileSize());
+        String contentType = file.getContentType() != null
+                ? file.getContentType().toLowerCase().split(";")[0].trim()
+                : "image/jpeg";
 
         Transaction transaction = transactionRepository.findByIdAndOwner_Id(transactionId, userId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Transaction not found"));
@@ -73,7 +64,7 @@ public class ReceiptStorageService {
         User owner = userRepository.findById(userId).orElseThrow();
         attachment.setOwner(owner);
         attachment.setTransaction(transaction);
-        attachment.setOriginalFilename(file.getOriginalFilename() != null ? file.getOriginalFilename() : storedName);
+        attachment.setOriginalFilename(UploadFileValidator.safeFilename(file.getOriginalFilename()));
         attachment.setStoredFilename(storedName);
         attachment.setContentType(contentType);
         attachment.setSizeBytes(file.getSize());

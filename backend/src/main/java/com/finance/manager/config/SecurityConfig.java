@@ -1,6 +1,7 @@
 package com.finance.manager.config;
 
 import com.finance.manager.security.JwtAuthenticationFilter;
+import com.finance.manager.security.RateLimitFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
@@ -33,6 +34,7 @@ public class SecurityConfig {
     SecurityFilterChain securityFilterChain(
             HttpSecurity http,
             JwtAuthenticationFilter jwtAuthenticationFilter,
+            RateLimitFilter rateLimitFilter,
             Environment environment) throws Exception {
 
         boolean localProfile = Arrays.asList(environment.getActiveProfiles()).contains("local");
@@ -43,7 +45,8 @@ public class SecurityConfig {
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> {
                     auth.requestMatchers(HttpMethod.OPTIONS, "/**").permitAll();
-                    auth.requestMatchers(HttpMethod.POST, "/auth/login", "/auth/register").permitAll();
+                    auth.requestMatchers(HttpMethod.POST, "/auth/login", "/auth/register", "/auth/google").permitAll();
+                    auth.requestMatchers("/config/public").permitAll();
                     auth.requestMatchers("/actuator/health", "/actuator/health/**").permitAll();
                     if (localProfile) {
                         auth.requestMatchers("/h2-console/**").permitAll();
@@ -52,6 +55,7 @@ public class SecurityConfig {
                 })
                 .exceptionHandling(e ->
                         e.authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)))
+                .addFilterBefore(rateLimitFilter, UsernamePasswordAuthenticationFilter.class)
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         if (localProfile) {

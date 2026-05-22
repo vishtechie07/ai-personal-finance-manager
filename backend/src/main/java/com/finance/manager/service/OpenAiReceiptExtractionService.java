@@ -5,6 +5,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.finance.manager.config.OpenAiProperties;
+import com.finance.manager.config.StorageProperties;
+import com.finance.manager.util.UploadFileValidator;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -24,10 +26,15 @@ public class OpenAiReceiptExtractionService {
     private static final URI OPENAI_CHAT = URI.create("https://api.openai.com/v1/chat/completions");
 
     private final OpenAiProperties openAiProperties;
+    private final StorageProperties storageProperties;
     private final ObjectMapper objectMapper;
 
-    public OpenAiReceiptExtractionService(OpenAiProperties openAiProperties, ObjectMapper objectMapper) {
+    public OpenAiReceiptExtractionService(
+            OpenAiProperties openAiProperties,
+            StorageProperties storageProperties,
+            ObjectMapper objectMapper) {
         this.openAiProperties = openAiProperties;
+        this.storageProperties = storageProperties;
         this.objectMapper = objectMapper;
     }
 
@@ -35,6 +42,7 @@ public class OpenAiReceiptExtractionService {
         if (apiKey == null || apiKey.isBlank() || file == null || file.isEmpty()) {
             return Optional.empty();
         }
+        UploadFileValidator.validateReceiptFile(file, storageProperties.getMaxFileSize());
         try {
             String contentType = file.getContentType() != null ? file.getContentType() : "image/jpeg";
             String base64 = Base64.getEncoder().encodeToString(file.getBytes());

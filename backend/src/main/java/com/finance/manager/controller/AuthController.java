@@ -1,8 +1,10 @@
 package com.finance.manager.controller;
 
+import com.finance.manager.config.AuthProperties;
 import com.finance.manager.model.User;
 import com.finance.manager.repository.UserRepository;
 import com.finance.manager.service.DemoSeedService;
+import com.finance.manager.service.GoogleAuthService;
 import com.finance.manager.security.AuthPrincipal;
 import com.finance.manager.security.JwtService;
 import jakarta.validation.Valid;
@@ -30,16 +32,22 @@ public class AuthController {
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final DemoSeedService demoSeedService;
+    private final GoogleAuthService googleAuthService;
+    private final AuthProperties authProperties;
 
     public AuthController(
             UserRepository userRepository,
             PasswordEncoder passwordEncoder,
             JwtService jwtService,
-            DemoSeedService demoSeedService) {
+            DemoSeedService demoSeedService,
+            GoogleAuthService googleAuthService,
+            AuthProperties authProperties) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
         this.demoSeedService = demoSeedService;
+        this.googleAuthService = googleAuthService;
+        this.authProperties = authProperties;
     }
 
     @PostMapping("/login")
@@ -49,24 +57,21 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Invalid credentials"));
         }
 
-        String token = jwtService.generateToken(user);
-        Map<String, Object> body = new HashMap<>();
-        body.put("token", token);
-        body.put("user", toUserInfo(user));
-        return ResponseEntity.ok(body);
+        return ResponseEntity.ok(tokenResponse(user));
+    }
+
+    @PostMapping("/google")
+    public ResponseEntity<Map<String, Object>> googleSignIn(@RequestBody @Valid GoogleSignInRequest request) {
+        User user = googleAuthService.authenticate(request.credential());
+        return ResponseEntity.ok(tokenResponse(user));
     }
 
     private boolean passwordMatches(User user, String rawPassword) {
+        if (user.getAuthProvider() == User.AuthProvider.GOOGLE && user.getPassword() == null) {
+            return false;
+        }
         String stored = user.getPassword();
-        if (stored != null && stored.startsWith("$2")) {
-            return passwordEncoder.matches(rawPassword, stored);
-        }
-        if (stored != null && stored.equals(rawPassword)) {
-            user.setPassword(passwordEncoder.encode(rawPassword));
-            userRepository.save(user);
-            return true;
-        }
-        return false;
+        return stored != null && stored.startsWith("$2") && passwordEncoder.matches(rawPassword, stored);
     }
 
     @GetMapping("/me")
@@ -81,6 +86,10 @@ public class AuthController {
 
     @PostMapping("/register")
     public ResponseEntity<Map<String, Object>> register(@RequestBody @Valid RegisterRequest request) {
+        if (!authProperties.isRegistrationEnabled()) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(Map.of("error", "Registration is disabled. Sign in with Google instead."));
+        }
         if (userRepository.existsByUsername(request.username())) {
             return ResponseEntity.badRequest().body(Map.of("error", "Username already exists"));
         }
@@ -90,21 +99,24 @@ public class AuthController {
 
         User user = new User();
         user.setUsername(request.username());
-        user.setEmail(request.email());
+        user.setEmail(request.email().toLowerCase());
         user.setPassword(passwordEncoder.encode(request.password()));
         user.setFirstName(request.firstName());
         user.setLastName(request.lastName());
         user.setRole(User.Role.USER);
+        user.setAuthProvider(User.AuthProvider.LOCAL);
 
         User saved = userRepository.save(user);
         demoSeedService.seedDemoFinancialsIfEmpty(saved);
 
-        String token = jwtService.generateToken(saved);
+        return ResponseEntity.ok(tokenResponse(saved));
+    }
 
+    private Map<String, Object> tokenResponse(User user) {
         Map<String, Object> body = new HashMap<>();
-        body.put("token", token);
-        body.put("user", toUserInfo(saved));
-        return ResponseEntity.ok(body);
+        body.put("token", jwtService.generateToken(user));
+        body.put("user", toUserInfo(user));
+        return body;
     }
 
     private Map<String, Object> toUserInfo(User user) {
@@ -115,6 +127,7 @@ public class AuthController {
         info.put("firstName", user.getFirstName());
         info.put("lastName", user.getLastName());
         info.put("role", user.getRole());
+        info.put("authProvider", user.getAuthProvider());
         return info;
     }
 
@@ -125,6 +138,11 @@ public class AuthController {
 
             @NotBlank(message = "Password is required")
             String password
+    ) {}
+
+    public record GoogleSignInRequest(
+            @NotBlank(message = "Google credential is required")
+            String credential
     ) {}
 
     public record RegisterRequest(

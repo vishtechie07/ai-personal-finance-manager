@@ -26,10 +26,16 @@ public class User {
     @Column(unique = true, nullable = false)
     private String email;
     
-    @NotBlank(message = "Password is required")
-    @Size(min = 6, message = "Password must be at least 6 characters")
-    @Column(nullable = false)
+    @JsonIgnore
+    @Column(nullable = true)
     private String password;
+
+    @Column(name = "google_sub", unique = true)
+    private String googleSub;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "auth_provider", nullable = false)
+    private AuthProvider authProvider = AuthProvider.LOCAL;
     
     @Column(name = "first_name")
     private String firstName;
@@ -58,6 +64,9 @@ public class User {
         updatedAt = LocalDateTime.now();
         if (role == null) {
             role = Role.USER;
+        }
+        if (authProvider == null) {
+            authProvider = AuthProvider.LOCAL;
         }
     }
     
@@ -148,6 +157,26 @@ public class User {
         this.openaiApiKeyEncrypted = openaiApiKeyEncrypted;
     }
     
+    public String getGoogleSub() {
+        return googleSub;
+    }
+
+    public void setGoogleSub(String googleSub) {
+        this.googleSub = googleSub;
+    }
+
+    public AuthProvider getAuthProvider() {
+        return authProvider;
+    }
+
+    public void setAuthProvider(AuthProvider authProvider) {
+        this.authProvider = authProvider;
+    }
+
+    public enum AuthProvider {
+        LOCAL, GOOGLE
+    }
+
     public enum Role {
         USER, ADMIN
     }

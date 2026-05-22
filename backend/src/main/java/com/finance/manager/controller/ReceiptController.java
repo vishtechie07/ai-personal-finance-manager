@@ -5,6 +5,7 @@ import com.finance.manager.security.AuthPrincipal;
 import com.finance.manager.service.OpenAiKeyResolver;
 import com.finance.manager.service.OpenAiReceiptExtractionService;
 import com.finance.manager.service.ReceiptStorageService;
+import com.finance.manager.util.UploadFileValidator;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -53,7 +54,8 @@ public class ReceiptController {
         Resource resource = receiptStorageService.loadAsResource(principal.userId(), id);
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION,
-                        "attachment; filename=\"" + meta.getOriginalFilename() + "\"")
+                        "attachment; filename=\"" + UploadFileValidator.safeFilename(
+                                meta.getOriginalFilename()) + "\"")
                 .contentType(MediaType.parseMediaType(meta.getContentType()))
                 .body(resource);
     }

@@ -24,6 +24,9 @@ public class ApplicationSeedRunner {
             PasswordEncoder passwordEncoder,
             DemoSeedService demoSeedService) {
         return args -> {
+            if (!seedProperties.isDemoEnabled()) {
+                return;
+            }
             boolean consolidate = seedProperties.isConsolidateLegacyUsers();
             boolean demoExists = userRepository.existsByUsername(DemoSeedService.DEMO_USERNAME);
 
@@ -48,6 +51,7 @@ public class ApplicationSeedRunner {
                     demo.setFirstName(DemoSeedService.DEMO_FIRST_NAME);
                     demo.setLastName(DemoSeedService.DEMO_LAST_NAME);
                     demo.setRole(User.Role.USER);
+                    demo.setAuthProvider(User.AuthProvider.LOCAL);
                     userRepository.save(demo);
                     System.out.println(
                             "Created seed user: "

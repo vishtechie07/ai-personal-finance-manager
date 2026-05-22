@@ -24,6 +24,12 @@ app:
     api-key: ${OPENAI_API_KEY:}
   cors:
     allowed-origin-patterns: ${CORS_ALLOWED_ORIGIN_PATTERNS:https://*.onrender.com}
+  google:
+    client-id: ${GOOGLE_CLIENT_ID:}
+  auth:
+    registration-enabled: ${APP_REGISTRATION_ENABLED:true}
+  seed:
+    demo-enabled: ${APP_SEED_DEMO_ENABLED:false}
 
 management:
   endpoints:
