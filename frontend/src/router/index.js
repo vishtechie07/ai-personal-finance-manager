@@ -1,90 +1,89 @@
-import { createRouter, createWebHistory } from 'vue-router'
-import { useAuthStore } from '../stores/auth'
+import { createRouter, createWebHistory } from "vue-router";
+import { useAuthStore } from "../stores/auth";
 
 const routes = [
   {
-    path: '/',
-    name: 'Home',
-    component: () => import('../views/Home.vue')
+    path: "/",
+    name: "Home",
+    component: () => import("../views/Home.vue"),
   },
   {
-    path: '/register',
-    name: 'Register',
-    component: () => import('../views/Register.vue'),
-    meta: { guestOnly: true }
+    path: "/register",
+    name: "Register",
+    component: () => import("../views/Register.vue"),
+    meta: { guestOnly: true },
   },
   {
-    path: '/dashboard',
-    name: 'Dashboard',
-    component: () => import('../views/Dashboard.vue'),
-    meta: { requiresAuth: true }
+    path: "/dashboard",
+    name: "Dashboard",
+    component: () => import("../views/Dashboard.vue"),
+    meta: { requiresAuth: true },
   },
   {
-    path: '/transactions',
-    name: 'Transactions',
-    component: () => import('../views/Transactions.vue'),
-    meta: { requiresAuth: true }
+    path: "/transactions",
+    name: "Transactions",
+    component: () => import("../views/Transactions.vue"),
+    meta: { requiresAuth: true },
   },
   {
-    path: '/budgets',
-    name: 'Budgets',
-    component: () => import('../views/Budgets.vue'),
-    meta: { requiresAuth: true }
+    path: "/budgets",
+    name: "Budgets",
+    component: () => import("../views/Budgets.vue"),
+    meta: { requiresAuth: true },
   },
   {
-    path: '/bills',
-    name: 'Bills',
-    component: () => import('../views/Bills.vue'),
-    meta: { requiresAuth: true }
+    path: "/bills",
+    name: "Bills",
+    component: () => import("../views/Bills.vue"),
+    meta: { requiresAuth: true },
   },
   {
-    path: '/insights',
-    name: 'Insights',
-    component: () => import('../views/Insights.vue'),
-    meta: { requiresAuth: true }
+    path: "/insights",
+    name: "Insights",
+    component: () => import("../views/Insights.vue"),
+    meta: { requiresAuth: true },
   },
   {
-    path: '/profile',
-    name: 'Profile',
-    component: () => import('../views/Profile.vue'),
-    meta: { requiresAuth: true }
+    path: "/profile",
+    name: "Profile",
+    component: () => import("../views/Profile.vue"),
+    meta: { requiresAuth: true },
   },
   {
-    path: '/settings',
-    name: 'Settings',
-    component: () => import('../views/Settings.vue'),
-    meta: { requiresAuth: true }
+    path: "/settings",
+    name: "Settings",
+    component: () => import("../views/Settings.vue"),
+    meta: { requiresAuth: true },
   },
-
-]
+];
 
 const router = createRouter({
   history: createWebHistory(),
-  routes
-})
+  routes,
+});
 
 router.beforeEach(async (to, from, next) => {
-  const authStore = useAuthStore()
+  const authStore = useAuthStore();
 
   if (to.meta.guestOnly && authStore.isAuthenticated) {
-    next('/dashboard')
-    return
+    next("/dashboard");
+    return;
   }
 
   if (!to.meta.requiresAuth) {
-    next()
-    return
+    next();
+    return;
   }
   if (!authStore.token) {
-    next({ path: '/', query: { redirect: to.fullPath } })
-    return
+    next({ path: "/", query: { redirect: to.fullPath } });
+    return;
   }
-  const ok = await authStore.checkAuth()
+  const ok = await authStore.checkAuth();
   if (!ok) {
-    next({ path: '/', query: { redirect: to.fullPath } })
-    return
+    next({ path: "/", query: { redirect: to.fullPath } });
+    return;
   }
-  next()
-})
+  next();
+});
 
-export default router
+export default router;

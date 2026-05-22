@@ -1,12 +1,13 @@
 {
   "name": "spendsense-frontend",
   "version": "1.0.0",
+  "type": "module",
   "description": "SpendSense frontend — track spending, manage budgets, and AI insights",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "lint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts --fix --ignore-path .gitignore"
+    "lint": "eslint src --ext .vue,.js --fix"
   },
   "dependencies": {
     "vue": "^3.3.8",

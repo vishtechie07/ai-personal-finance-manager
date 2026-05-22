@@ -1,32 +1,32 @@
-import { createApp } from 'vue'
-import { createPinia } from 'pinia'
-import axios from 'axios'
-import App from './App.vue'
-import router from './router'
-import { useAuthStore } from './stores/auth'
-import './assets/main.css'
+import { createApp } from "vue";
+import { createPinia } from "pinia";
+import axios from "axios";
+import App from "./App.vue";
+import router from "./router";
+import { useAuthStore } from "./stores/auth";
+import "./assets/main.css";
 
-const app = createApp(App)
-const pinia = createPinia()
+const app = createApp(App);
+const pinia = createPinia();
 
-app.use(pinia)
-app.use(router)
+app.use(pinia);
+app.use(router);
 
 axios.interceptors.response.use(
   (response) => response,
   (error) => {
-    console.warn('API request failed:', error.message)
+    console.warn("API request failed:", error.message);
     if (error.response?.status === 401) {
-      const authStore = useAuthStore()
-      authStore.logout()
+      const authStore = useAuthStore();
+      authStore.logout();
       if (router.currentRoute.value?.meta?.requiresAuth) {
-        router.push('/')
+        router.push("/");
       }
     }
-    return Promise.reject(error)
-  }
-)
+    return Promise.reject(error);
+  },
+);
 
-app.mount('#app')
+app.mount("#app");
 
-console.log('App mounted successfully')
+console.log("App mounted successfully");
