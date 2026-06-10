@@ -13,8 +13,8 @@ Built for solo users and demos. Ships as a **single Docker image** (Vue UI + Spr
 | Area | Capability |
 |------|------------|
 | **Accounts** | Register, JWT login, per-user data isolation |
-| **Transactions** | CRUD, monthly views, search/filter/sort, quick-add from dashboard |
-| **Budgets** | Monthly limits by category; spent amount synced from expenses; progress and “attention” on dashboard |
+| **Transactions** | CRUD, monthly views, search/filter/sort, add from dashboard modal |
+| **Budgets** | Monthly limits by category; spent amount synced from expenses; progress and alerts on dashboard |
 | **Bills** | Recurring bills, due-soon list, mark paid (optional linked expense) |
 | **Notifications** | In-app bell: budget ≥90% used, bills due within 7 days (sync on demand) |
 | **Receipts** | Attach image/PDF to a transaction; optional OpenAI extraction of amount/date/merchant |
@@ -22,6 +22,8 @@ Built for solo users and demos. Ships as a **single Docker image** (Vue UI + Spr
 | **Insights** | Charts and summaries computed in the UI from your transaction data |
 
 New registrations receive the same style of **multi-month sample data** as the seeded trial account (see [docs/DEMO_CREDENTIALS.md](docs/DEMO_CREDENTIALS.md)).
+
+![SpendSense dashboard — net balance, KPIs, charts, and budget health](docs/screenshots/dashboard.png)
 
 ---
 
@@ -104,7 +106,7 @@ sequenceDiagram
 - JWT authentication (BCrypt passwords)
 - Transactions with categories and types (income/expense)
 - Monthly budgets with automatic **spent** sync from expenses
-- Dashboard: summaries, budget health, due bills, quick-add transaction
+- Dashboard: hero balance, KPI row (with month-over-month deltas), category and trend charts, budget health sidebar, recent transactions table
 
 ### Bills & alerts
 - Bill CRUD and **mark paid**
@@ -117,8 +119,8 @@ sequenceDiagram
 - Key resolution: user key → platform `OPENAI_API_KEY` → keyword fallback ([docs/OPENAI.md](docs/OPENAI.md))
 
 ### UX
-- SpendSense branding, glass-style UI, horizontal action buttons
-- Toast errors for API failures; fixed register page (`<script setup>`)
+- SpendSense branding, indigo design tokens, dashboard cards and category pills
+- Toast feedback for API success and errors; cold-start tolerant auth on Render
 
 ---
 
@@ -139,11 +141,11 @@ sequenceDiagram
 
 ```bash
 cp .env.example .env
-# Set JWT_SECRET (≥32 characters) and optionally OPENAI_API_KEY
+# Set JWT_SECRET (≥32 characters). For local demo data, set APP_SEED_DEMO_ENABLED=true
 docker compose up --build
 ```
 
-Open **http://localhost:8080** and sign in with the [trial account](docs/DEMO_CREDENTIALS.md).
+Open **http://localhost:8080** and sign in with the [trial account](docs/DEMO_CREDENTIALS.md). Seeding creates three months of sample transactions and budgets aligned to the current calendar month.
 
 ### Option B — Split dev (H2 + Vite)
 
@@ -179,6 +181,8 @@ npm run dev
 Details: **[docs/DEMO_CREDENTIALS.md](docs/DEMO_CREDENTIALS.md)**
 
 If an old `demo` user exists in Postgres, wipe the volume (`docker compose down -v`) or set `APP_SEED_CONSOLIDATE_LEGACY_USERS=true` once and redeploy.
+
+If the dashboard looks empty but you are signed in as `spendsense`, sample data may be tied to an older month — clear sample data from the banner or call `DELETE /api/auth/me/sample-data`, then restart with `APP_SEED_DEMO_ENABLED=true` to re-seed.
 
 ---
 
@@ -269,7 +273,11 @@ ai-personal-finance-manager/
 ├── docs/
 │   ├── RENDER_DEPLOY.md
 │   ├── OPENAI.md
-│   └── DEMO_CREDENTIALS.md
+│   ├── DEMO_CREDENTIALS.md
+│   └── screenshots/
+│       └── dashboard.png
+├── .stitch/
+│   └── DESIGN.md            # Design tokens and dashboard IA
 ├── .env.example
 └── README.md
 ```

@@ -1,584 +1,121 @@
 <template>
-  <div class="w-full mx-auto pt-6">
-    <!-- Success Notification -->
+  <div class="w-full mx-auto pt-2 sm:pt-6 max-w-7xl">
+    <DashboardHeader
+      :username="username"
+      :month-label="currentMonthDisplay"
+      :loading="dashboardLoading"
+      @previous-month="previousMonth"
+      @next-month="nextMonth"
+      @current-month="goToCurrentMonth"
+      @add-transaction="showAddTransaction = true"
+      @add-budget="showAddBudget = true"
+      @refresh="refreshDashboard"
+    />
+
     <div
-      v-if="showSuccessMessage"
-      class="fixed top-20 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50 transform transition-all duration-300 ease-in-out"
+      class="dashboard-card p-6 mb-6 animate-slide-up bg-gradient-to-br from-white to-primary-50/30 border-primary-100/60"
     >
-      <div class="flex items-center space-x-2">
-        <svg
-          class="w-5 h-5"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-          ></path>
-        </svg>
-        <span>{{ successMessage }}</span>
-      </div>
-    </div>
-
-    <!-- Page Header -->
-    <div
-      class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-8"
-    >
-      <div class="min-w-0">
-        <h1 class="text-3xl font-bold text-slate-900">Dashboard</h1>
-        <p class="text-slate-600 mt-2">
-          Welcome back, {{ username }}! Here's your financial overview.
-        </p>
-      </div>
-      <div class="page-header-actions">
-        <button type="button" class="btn-secondary" @click="refreshDashboard">
-          <svg
-            class="w-5 h-5 shrink-0"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-            aria-hidden="true"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-            ></path>
-          </svg>
-          Refresh
-        </button>
-        <button
-          type="button"
-          class="btn-primary"
-          @click="showAddTransaction = true"
-        >
-          <svg
-            class="w-5 h-5 shrink-0"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-            aria-hidden="true"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-            ></path>
-          </svg>
-          Add Transaction
-        </button>
-        <button
-          type="button"
-          class="btn-secondary"
-          @click="showAddBudget = true"
-        >
-          <svg
-            class="w-5 h-5 shrink-0"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-            aria-hidden="true"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"
-            ></path>
-          </svg>
-          Create Budget
-        </button>
-      </div>
-    </div>
-
-    <!-- Month Selector -->
-    <div class="glass-card p-6 mb-8">
-      <div class="flex items-center justify-between">
-        <h3 class="text-lg font-semibold text-slate-900">
-          Viewing Data for {{ currentMonthDisplay }}
-        </h3>
-        <div class="flex items-center space-x-3">
-          <button
-            type="button"
-            class="btn-icon"
-            aria-label="Previous month"
-            @click="previousMonth"
-          >
-            <svg
-              class="w-5 h-5 text-slate-400"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M15 19l-7-7 7-7"
-              ></path>
-            </svg>
-          </button>
-          <span
-            class="text-lg font-medium text-slate-900 min-w-[120px] text-center"
-          >
-            {{ currentMonthDisplay }}
-          </span>
-          <button
-            type="button"
-            class="btn-icon"
-            aria-label="Next month"
-            @click="nextMonth"
-          >
-            <svg
-              class="w-5 h-5 text-slate-400"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M9 5l7 7-7 7"
-              ></path>
-            </svg>
-          </button>
-          <button type="button" class="btn-text" @click="goToCurrentMonth">
-            Current Month
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <div class="glass-card p-6 mb-6">
-      <h3 class="text-lg font-semibold text-slate-900 mb-4">
-        Quick add transaction
-      </h3>
-      <form
-        class="grid grid-cols-1 md:grid-cols-5 gap-3 items-end"
-        @submit.prevent="quickAdd"
+      <div
+        class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between"
       >
-        <input
-          v-model="quickForm.description"
-          class="input-field"
-          placeholder="Description"
-          required
-        />
-        <input
-          v-model.number="quickForm.amount"
-          type="number"
-          step="0.01"
-          class="input-field"
-          placeholder="Amount"
-          required
-        />
-        <select v-model="quickForm.type" class="input-field">
-          <option value="EXPENSE">Expense</option>
-          <option value="INCOME">Income</option>
-        </select>
-        <input
-          v-model="quickForm.category"
-          class="input-field"
-          placeholder="Category"
-        />
-        <button type="submit" class="btn-primary" :disabled="quickSaving">
-          {{ quickSaving ? "Adding…" : "Add" }}
-        </button>
-      </form>
+        <div>
+          <p class="text-sm font-medium text-slate-600">Net balance</p>
+          <p
+            class="mt-1 text-3xl sm:text-4xl font-bold tabular-nums"
+            :class="
+              currentMonthBalance >= 0 ? 'text-slate-900' : 'text-danger-600'
+            "
+          >
+            {{ formatMoney(currentMonthBalance) }}
+          </p>
+          <p class="mt-2 text-sm text-slate-600">
+            {{ budgetStatus }} · {{ currentMonthDisplay }}
+          </p>
+        </div>
+        <div class="flex flex-wrap gap-2">
+          <span
+            v-if="attentionBudgets.length"
+            class="category-pill bg-warning-50 text-warning-700 border border-warning-100"
+          >
+            {{ attentionBudgets.length }} budget alert{{
+              attentionBudgets.length === 1 ? "" : "s"
+            }}
+          </span>
+          <span
+            v-if="dueSoonBills.length"
+            class="category-pill bg-primary-50 text-primary-700 border border-primary-100"
+          >
+            {{ dueSoonBills.length }} bill{{
+              dueSoonBills.length === 1 ? "" : "s"
+            }}
+            due soon
+          </span>
+        </div>
+      </div>
     </div>
 
-    <div v-if="dueSoonBills.length" class="glass-card p-6 mb-6">
-      <div class="flex justify-between items-center mb-3">
-        <h3 class="text-lg font-semibold text-slate-900">Bills due soon</h3>
-        <router-link
-          to="/bills"
-          class="text-sm text-primary-600 hover:underline"
-          >View all</router-link
-        >
-      </div>
-      <ul class="space-y-2">
-        <li
-          v-for="b in dueSoonBills"
-          :key="b.id"
-          class="flex justify-between text-sm"
-        >
-          <span>{{ b.payeeName }} — due {{ b.dueDate }}</span>
-          <span class="font-medium">${{ Number(b.amount).toFixed(2) }}</span>
-        </li>
-      </ul>
-    </div>
+    <DashboardKpiGrid :items="kpiItems" :loading="dashboardLoading" />
 
-    <div class="glass-card p-6 mb-6">
-      <h3 class="text-lg font-semibold text-slate-900 mb-4">Budget health</h3>
-      <div v-if="!budgetHealthItems.length" class="text-slate-500 text-sm">
-        No budgets for this month
-      </div>
-      <div v-else class="space-y-4">
-        <div v-for="item in budgetHealthItems" :key="item.id">
-          <div class="flex justify-between text-sm mb-1">
-            <router-link
-              :to="item.link"
-              class="font-medium text-slate-900 hover:text-primary-600"
-              >{{ item.name }}</router-link
-            >
-            <span>{{ item.pct.toFixed(0) }}%</span>
-          </div>
-          <div class="h-2 bg-slate-200 rounded-full overflow-hidden">
-            <div
-              class="h-full rounded-full"
-              :class="item.barClass"
-              :style="{ width: Math.min(item.pct, 100) + '%' }"
+    <div class="grid grid-cols-1 xl:grid-cols-3 gap-6 mb-6">
+      <div class="xl:col-span-2 grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div class="dashboard-card p-6 h-[22rem] flex flex-col">
+          <h3 class="text-lg font-semibold text-slate-900 mb-4">
+            Spending by category
+          </h3>
+          <div class="relative flex-1 min-h-0">
+            <canvas
+              v-show="hasCategoryChartData"
+              ref="categoryChart"
+              class="absolute inset-0 w-full h-full"
             />
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div
-      v-if="attentionBudgets.length"
-      class="glass-card p-6 mb-6 border border-amber-200 bg-amber-50/50"
-    >
-      <h3 class="text-lg font-semibold text-amber-900 mb-3">Needs attention</h3>
-      <ul class="space-y-2 text-sm text-amber-800">
-        <li v-for="a in attentionBudgets" :key="a.id">
-          <router-link :to="a.link" class="hover:underline">{{
-            a.message
-          }}</router-link>
-        </li>
-      </ul>
-    </div>
-
-    <!-- Financial Summary Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-      <div class="glass-card p-6">
-        <div class="flex items-center">
-          <div
-            class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center"
-          >
-            <svg
-              class="w-6 h-6 text-green-600"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"
-              ></path>
-            </svg>
-          </div>
-          <div class="ml-4">
-            <p class="text-sm font-medium text-slate-600">
-              Current Month Balance
-            </p>
-            <p class="text-2xl font-bold text-slate-900">
-              ${{ currentMonthBalance.toFixed(2) }}
-            </p>
-          </div>
-        </div>
-      </div>
-
-      <div class="glass-card p-6">
-        <div class="flex items-center">
-          <div
-            class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center"
-          >
-            <svg
-              class="w-6 h-6 text-blue-600"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"
-              ></path>
-            </svg>
-          </div>
-          <div class="ml-4">
-            <p class="text-sm font-medium text-slate-600">
-              Current Month Income
-            </p>
-            <p class="text-2xl font-bold text-green-600">
-              ${{ currentMonthIncome.toFixed(2) }}
-            </p>
-          </div>
-        </div>
-      </div>
-
-      <div class="glass-card p-6">
-        <div class="flex items-center">
-          <div
-            class="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center"
-          >
-            <svg
-              class="w-6 h-6 text-red-600"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6"
-              ></path>
-            </svg>
-          </div>
-          <div class="ml-4">
-            <p class="text-sm font-medium text-slate-600">
-              Current Month Expenses
-            </p>
-            <p class="text-2xl font-bold text-red-600">
-              ${{ currentMonthExpenses.toFixed(2) }}
-            </p>
-          </div>
-        </div>
-      </div>
-
-      <div class="glass-card p-6">
-        <div class="flex items-center">
-          <div
-            class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center"
-          >
-            <svg
-              class="w-6 h-6 text-purple-600"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
-              ></path>
-            </svg>
-          </div>
-          <div class="ml-4">
-            <p class="text-sm font-medium text-slate-600">
-              Current Month Budgets
-            </p>
-            <p class="text-2xl font-bold text-purple-600">
-              {{ currentMonthBudgets.length }}
-            </p>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Charts Section -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4 w-full">
-      <div class="glass-card p-6" style="height: 400px; overflow: hidden">
-        <h3 class="text-lg font-semibold text-slate-900">
-          Spending by Category - {{ currentMonthDisplay }}
-        </h3>
-        <div style="height: 300px; position: relative">
-          <canvas
-            v-show="hasCategoryChartData"
-            ref="categoryChart"
-            style="
-              max-height: 300px;
-              width: 100% !important;
-              height: 100% !important;
-              display: block;
-            "
-          ></canvas>
-          <div
-            v-if="!hasCategoryChartData"
-            class="absolute inset-0 flex flex-col items-center justify-center text-center text-slate-500 px-4"
-          >
-            <p class="font-medium text-slate-700">No spending this month</p>
-            <p class="text-sm mt-1">
-              Add an expense or pick another month to see the chart.
-            </p>
-          </div>
-        </div>
-      </div>
-
-      <div class="glass-card p-6" style="height: 400px; overflow: hidden">
-        <h3 class="text-lg font-semibold text-slate-900">
-          Monthly Overview - Last 6 Months
-        </h3>
-        <div style="height: 300px; position: relative">
-          <canvas
-            v-show="hasMonthlyChartData"
-            ref="monthlyChart"
-            style="
-              max-height: 300px;
-              width: 100% !important;
-              height: 100% !important;
-              display: block;
-            "
-          ></canvas>
-          <div
-            v-if="!hasMonthlyChartData"
-            class="absolute inset-0 flex flex-col items-center justify-center text-center text-slate-500 px-4"
-          >
-            <p class="font-medium text-slate-700">Not enough history yet</p>
-            <p class="text-sm mt-1">
-              Add transactions across a few months to see trends.
-            </p>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Recent Transactions -->
-    <div class="glass-card p-6 mb-4">
-      <div class="flex justify-between items-center mb-4">
-        <h3 class="text-lg font-semibold text-slate-900">
-          Current Month Transactions
-        </h3>
-        <router-link
-          to="/transactions"
-          class="text-blue-600 hover:text-blue-700 text-sm font-medium"
-        >
-          View All
-        </router-link>
-      </div>
-      <div class="space-y-3">
-        <div
-          v-if="currentMonthTransactions.length === 0"
-          class="text-center py-8 text-gray-500"
-        >
-          <svg
-            class="w-12 h-12 mx-auto mb-4 text-gray-300"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-            ></path>
-          </svg>
-          <p>No transactions found for {{ currentMonthDisplay }}</p>
-        </div>
-        <div
-          v-for="transaction in currentMonthTransactions.slice(0, 5)"
-          v-else
-          :key="transaction.id"
-          class="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
-        >
-          <div class="flex items-center space-x-3">
             <div
-              class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center"
+              v-if="!hasCategoryChartData"
+              class="absolute inset-0 flex flex-col items-center justify-center text-center text-slate-500 px-4"
             >
-              <svg
-                class="w-4 h-4 text-blue-600"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"
-                ></path>
-              </svg>
-            </div>
-            <div>
-              <p class="font-medium text-slate-900">
-                {{ transaction.description }}
+              <p class="font-medium text-slate-700">No spending this month</p>
+              <p class="text-sm mt-1">
+                Add an expense or pick another month to see the chart.
               </p>
-              <p class="text-sm text-gray-500">{{ transaction.category }}</p>
             </div>
           </div>
-          <div class="flex items-center space-x-4">
-            <div class="text-right">
-              <p
-                class="font-medium"
-                :class="
-                  transaction.type === 'EXPENSE'
-                    ? 'text-red-600'
-                    : 'text-green-600'
-                "
-              >
-                {{ transaction.type === "EXPENSE" ? "-" : "+" }}${{
-                  transaction.amount.toFixed(2)
-                }}
-              </p>
-              <p class="text-sm text-gray-500">
-                {{ formatDate(transaction.transactionDate) }}
+        </div>
+
+        <div class="dashboard-card p-6 h-[22rem] flex flex-col">
+          <h3 class="text-lg font-semibold text-slate-900 mb-4">
+            Six-month trend
+          </h3>
+          <div class="relative flex-1 min-h-0">
+            <canvas
+              v-show="hasMonthlyChartData"
+              ref="monthlyChart"
+              class="absolute inset-0 w-full h-full"
+            />
+            <div
+              v-if="!hasMonthlyChartData"
+              class="absolute inset-0 flex flex-col items-center justify-center text-center text-slate-500 px-4"
+            >
+              <p class="font-medium text-slate-700">Not enough history yet</p>
+              <p class="text-sm mt-1">
+                Add transactions across a few months to see trends.
               </p>
             </div>
           </div>
         </div>
       </div>
+
+      <DashboardTodayPanel
+        :budget-health-items="budgetHealthItems"
+        :due-soon-bills="dueSoonBills"
+        :attention-budgets="attentionBudgets"
+        :alerts="budgetAlerts"
+      />
     </div>
 
-    <!-- Budget Alerts -->
-    <div class="glass-card p-6">
-      <h3 class="text-lg font-semibold text-slate-900 mb-4">
-        Budget Alerts for {{ currentMonthDisplay }}
-      </h3>
-      <div class="space-y-3">
-        <div
-          v-if="budgetAlerts.length === 0"
-          class="text-center py-8 text-gray-500"
-        >
-          <svg
-            class="w-12 h-12 mx-auto mb-4 text-gray-300"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-            ></path>
-          </svg>
-          <p>No budget alerts for {{ currentMonthDisplay }}</p>
-        </div>
-        <div
-          v-for="alert in budgetAlerts"
-          v-else
-          :key="alert.id"
-          class="flex items-center p-3 border border-gray-200 rounded-lg"
-        >
-          <div
-            class="w-8 h-8 rounded-full flex items-center justify-center mr-3"
-            :class="alert.type === 'warning' ? 'bg-yellow-100' : 'bg-red-100'"
-          >
-            <svg
-              class="w-4 h-4"
-              :class="
-                alert.type === 'warning' ? 'text-yellow-600' : 'text-red-600'
-              "
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z"
-              ></path>
-            </svg>
-          </div>
-          <div class="flex-1">
-            <p class="font-medium text-slate-900">{{ alert.title }}</p>
-            <p class="text-sm text-slate-600">{{ alert.message }}</p>
-          </div>
-        </div>
-      </div>
-    </div>
+    <DashboardRecentTransactions
+      class="mt-6"
+      :transactions="currentMonthTransactions.slice(0, 8)"
+      :month-label="currentMonthDisplay"
+    />
 
     <!-- Add Transaction Modal -->
     <div
@@ -840,6 +377,7 @@
 
 <script>
 import { ref, computed, onMounted, onUnmounted, watch } from "vue";
+import axios from "axios";
 import { useAuthStore } from "../stores/auth";
 import { useTransactionsStore } from "../stores/transactions";
 import { useBudgetsStore } from "../stores/budgets";
@@ -854,11 +392,35 @@ import {
 import { useBillsStore } from "../stores/bills";
 import { useToast } from "../composables/useToast";
 import { getApiErrorMessage } from "../utils/apiError";
+import { formatMoney } from "../utils/formatCategory";
+import DashboardHeader from "../components/dashboard/DashboardHeader.vue";
+import DashboardKpiGrid from "../components/dashboard/DashboardKpiGrid.vue";
+import DashboardTodayPanel from "../components/dashboard/DashboardTodayPanel.vue";
+import DashboardRecentTransactions from "../components/dashboard/DashboardRecentTransactions.vue";
+
+const CHART_PALETTE = [
+  "#4f46e5",
+  "#06b6d4",
+  "#16a34a",
+  "#d97706",
+  "#dc2626",
+  "#7c3aed",
+  "#0891b2",
+  "#65a30d",
+  "#ea580c",
+  "#64748b",
+];
 
 Chart.register(...registerables);
 
 export default {
   name: "Dashboard",
+  components: {
+    DashboardHeader,
+    DashboardKpiGrid,
+    DashboardTodayPanel,
+    DashboardRecentTransactions,
+  },
   setup() {
     const authStore = useAuthStore();
     const transactionsStore = useTransactionsStore();
@@ -866,14 +428,8 @@ export default {
     const billsStore = useBillsStore();
     const router = useRouter();
     const toast = useToast();
+    const priorMonthStats = ref({ income: 0, expenses: 0, balance: 0 });
 
-    const quickForm = ref({
-      description: "",
-      amount: "",
-      type: "EXPENSE",
-      category: "OTHER",
-    });
-    const quickSaving = ref(false);
     const dueSoonBills = computed(() => billsStore.dueSoon);
 
     const budgetHealthItems = computed(() => {
@@ -907,32 +463,8 @@ export default {
         }));
     });
 
-    const quickAdd = async () => {
-      quickSaving.value = true;
-      try {
-        await transactionsStore.addTransaction({
-          ...quickForm.value,
-          transactionDate: new Date().toISOString().split("T")[0],
-        });
-        quickForm.value = {
-          description: "",
-          amount: "",
-          type: "EXPENSE",
-          category: "OTHER",
-        };
-        toast.success("Transaction added");
-        await budgetsStore.fetchBudgets();
-      } catch (e) {
-        toast.error(getApiErrorMessage(e));
-      } finally {
-        quickSaving.value = false;
-      }
-    };
-
     const showAddTransaction = ref(false);
     const showAddBudget = ref(false);
-    const showSuccessMessage = ref(false);
-    const successMessage = ref("");
 
     // Chart refs
     const categoryChart = ref(null);
@@ -1051,6 +583,103 @@ export default {
       return budgetsStore.budgetsByMonth || [];
     });
 
+    const dashboardLoading = computed(
+      () =>
+        !transactionsStore.isInitialized && transactionsStore.isLoading,
+    );
+
+    const budgetUtilization = computed(() => {
+      const budgets = currentMonthBudgets.value;
+      if (!budgets.length) return null;
+      const totalBudget = budgets.reduce(
+        (sum, b) => sum + parseFloat(b.amount || 0),
+        0,
+      );
+      if (totalBudget <= 0) return null;
+      const totalSpent = budgets.reduce(
+        (sum, b) => sum + parseFloat(b.spentAmount || 0),
+        0,
+      );
+      return (totalSpent / totalBudget) * 100;
+    });
+
+    const percentDelta = (current, prior) => {
+      if (!prior || prior === 0) return null;
+      return ((current - prior) / Math.abs(prior)) * 100;
+    };
+
+    const kpiItems = computed(() => [
+      {
+        key: "balance",
+        label: "Net balance",
+        value: formatMoney(currentMonthBalance.value),
+        tone: currentMonthBalance.value >= 0 ? "neutral" : "negative",
+        delta: percentDelta(
+          currentMonthBalance.value,
+          priorMonthStats.value.balance,
+        ),
+      },
+      {
+        key: "income",
+        label: "Income",
+        value: formatMoney(currentMonthIncome.value),
+        tone: "positive",
+        delta: percentDelta(
+          currentMonthIncome.value,
+          priorMonthStats.value.income,
+        ),
+      },
+      {
+        key: "expenses",
+        label: "Expenses",
+        value: formatMoney(currentMonthExpenses.value),
+        tone: "negative",
+        delta: percentDelta(
+          currentMonthExpenses.value,
+          priorMonthStats.value.expenses,
+        ),
+      },
+      {
+        key: "budgets",
+        label: "Budget used",
+        value:
+          budgetUtilization.value === null
+            ? "—"
+            : `${budgetUtilization.value.toFixed(0)}%`,
+        tone: "accent",
+        hint:
+          budgetUtilization.value === null
+            ? "No budgets this month"
+            : `${currentMonthBudgets.value.length} active budget${
+                currentMonthBudgets.value.length === 1 ? "" : "s"
+              }`,
+        delta: null,
+      },
+    ]);
+
+    const loadPriorMonthStats = async () => {
+      let month = transactionsStore.currentMonth - 1;
+      let year = transactionsStore.currentYear;
+      if (month < 0) {
+        month = 11;
+        year -= 1;
+      }
+      const ym = `${year}-${String(month + 1).padStart(2, "0")}`;
+      try {
+        const { data } = await axios.get(`/transactions/month/${ym}`);
+        const txs = Array.isArray(data) ? data : [];
+        const income = txs
+          .filter((t) => t.type === "INCOME")
+          .reduce((sum, t) => sum + parseFloat(t.amount || 0), 0);
+        const expenses = txs
+          .filter((t) => t.type === "EXPENSE")
+          .reduce((sum, t) => sum + parseFloat(t.amount || 0), 0);
+        priorMonthStats.value = { income, expenses, balance: income - expenses };
+      } catch {
+        priorMonthStats.value = { income: 0, expenses: 0, balance: 0 };
+      }
+    };
+
     // Compute budget status from the budgets store
     const budgetStatus = computed(() => {
       if (!budgetsStore?.budgets) return "Loading...";
@@ -1105,56 +734,32 @@ export default {
     };
 
     const addTransaction = async () => {
-      // Validate required fields
       if (
         !newTransaction.value.description ||
         !newTransaction.value.amount ||
         !newTransaction.value.category ||
         !newTransaction.value.transactionDate
       ) {
-        successMessage.value =
-          "Please fill in all required fields (Description, Amount, Date, and Category)";
-        showSuccessMessage.value = true;
-        setTimeout(() => {
-          showSuccessMessage.value = false;
-        }, 3000);
+        toast.error("Fill in description, amount, date, and category.");
         return;
       }
 
-      if (!transactionsStore) {
-        successMessage.value =
-          "Transactions store not available. Please refresh the page.";
-        showSuccessMessage.value = true;
-        setTimeout(() => {
-          showSuccessMessage.value = false;
-        }, 3000);
-        return;
-      }
-
-      if (typeof transactionsStore.addTransaction !== "function") {
-        successMessage.value =
-          "Transactions store not properly initialized. Please refresh the page.";
-        showSuccessMessage.value = true;
-        setTimeout(() => {
-          showSuccessMessage.value = false;
-        }, 3000);
+      if (
+        !transactionsStore ||
+        typeof transactionsStore.addTransaction !== "function"
+      ) {
+        toast.error("Transactions unavailable. Refresh and try again.");
         return;
       }
 
       try {
-        // Use the shared store to add the transaction
         const newTransactionData = await transactionsStore.addTransaction(
           newTransaction.value,
         );
 
-        // Show success message
-        successMessage.value = `${newTransactionData.type === "INCOME" ? "Income" : "Expense"} added successfully!`;
-        showSuccessMessage.value = true;
-
-        // Hide success message after 3 seconds
-        setTimeout(() => {
-          showSuccessMessage.value = false;
-        }, 3000);
+        toast.success(
+          `${newTransactionData.type === "INCOME" ? "Income" : "Expense"} added`,
+        );
 
         showAddTransaction.value = false;
         newTransaction.value = {
@@ -1165,37 +770,16 @@ export default {
           transactionDate: new Date().toISOString().split("T")[0],
         };
 
-        // Reinitialize charts to show new data
+        await loadPriorMonthStats();
         setTimeout(() => {
           try {
             initCharts();
-          } catch (error) {
-            // Handle error silently
+          } catch {
+            /* ignore chart errors */
           }
         }, 100);
       } catch (error) {
-        // Provide more specific error messages
-        let errorMessage = "Please try again.";
-        if (
-          error.message &&
-          error.message.includes("newTransaction is not defined")
-        ) {
-          errorMessage =
-            "Transaction data is not properly formatted. Please refresh the page and try again.";
-        } else if (error.message) {
-          errorMessage = error.message;
-        } else if (error.response?.status === 404) {
-          errorMessage =
-            "Backend service not available. Transaction added to local storage.";
-        } else if (error.response?.status >= 500) {
-          errorMessage = "Server error. Please try again later.";
-        }
-
-        successMessage.value = `Failed to add transaction: ${errorMessage}`;
-        showSuccessMessage.value = true;
-        setTimeout(() => {
-          showSuccessMessage.value = false;
-        }, 3000);
+        toast.error(getApiErrorMessage(error));
       }
     };
 
@@ -1237,16 +821,8 @@ export default {
         // Use the shared store to add the budget
         const budget = await budgetsStore.addBudget(budgetData);
 
-        // Show success message
-        successMessage.value = `Budget "${budget.name}" created successfully!`;
-        showSuccessMessage.value = true;
+        toast.success(`Budget "${budget.name}" created`);
 
-        // Hide success message after 3 seconds
-        setTimeout(() => {
-          showSuccessMessage.value = false;
-        }, 3000);
-
-        // Reset form and close modal
         showAddBudget.value = false;
         newBudget.value = {
           name: "",
@@ -1257,21 +833,15 @@ export default {
         };
         isBudgetSmartSuggested.value = false;
 
-        // Reinitialize charts to show new data
         setTimeout(() => {
           try {
             initCharts();
-          } catch (error) {
-            console.error("Error reinitializing charts:", error);
+          } catch {
+            /* ignore chart errors */
           }
         }, 100);
       } catch (error) {
-        console.error("Failed to create budget:", error);
-        successMessage.value = "Failed to create budget. Please try again.";
-        showSuccessMessage.value = true;
-        setTimeout(() => {
-          showSuccessMessage.value = false;
-        }, 3000);
+        toast.error(getApiErrorMessage(error));
       }
     };
 
@@ -1312,20 +882,9 @@ export default {
             datasets: [
               {
                 data: data,
-                backgroundColor: [
-                  "#3B82F6",
-                  "#10B981",
-                  "#F59E0B",
-                  "#EF4444",
-                  "#8B5CF6",
-                  "#06B6D4",
-                  "#84CC16",
-                  "#F97316",
-                  "#EC4899",
-                  "#6B7280",
-                ],
+                backgroundColor: CHART_PALETTE,
                 borderWidth: 2,
-                borderColor: "#e2e8f0",
+                borderColor: "#f8fafc",
               },
             ],
           },
@@ -1417,8 +976,8 @@ export default {
               {
                 label: "Income",
                 data: incomeData,
-                borderColor: "#10B981",
-                backgroundColor: "rgba(16, 185, 129, 0.1)",
+                borderColor: "#16a34a",
+                backgroundColor: "rgba(22, 163, 74, 0.12)",
                 borderWidth: 3,
                 fill: true,
                 tension: 0.4,
@@ -1426,8 +985,8 @@ export default {
               {
                 label: "Expenses",
                 data: expenseData,
-                borderColor: "#EF4444",
-                backgroundColor: "rgba(239, 68, 68, 0.1)",
+                borderColor: "#dc2626",
+                backgroundColor: "rgba(220, 38, 38, 0.12)",
                 borderWidth: 3,
                 fill: true,
                 tension: 0.4,
@@ -1500,6 +1059,7 @@ export default {
           await budgetsStore.fetchBudgets();
         }
         await billsStore.fetchDueSoon();
+        await loadPriorMonthStats();
       } catch (error) {
         console.error("Dashboard load error:", error);
       }
@@ -1572,15 +1132,9 @@ export default {
 
         // Refresh charts
         refreshChartsForCurrentMonth();
-
-        // Show success message
-        successMessage.value = "Dashboard refreshed successfully!";
-        showSuccessMessage.value = true;
-        setTimeout(() => {
-          showSuccessMessage.value = false;
-        }, 3000);
+        toast.success("Dashboard refreshed");
       } catch (error) {
-        // Handle error silently
+        toast.error(getApiErrorMessage(error));
       }
     };
 
@@ -1618,6 +1172,7 @@ export default {
           newValues &&
           (newValues[0] !== oldValues?.[0] || newValues[1] !== oldValues?.[1])
         ) {
+          loadPriorMonthStats();
           refreshChartsForCurrentMonth();
         }
       },
@@ -1708,50 +1263,33 @@ export default {
     };
 
     return {
-      transactionsStore,
-      budgetsStore,
-      authStore,
       showAddTransaction,
       showAddBudget,
       newTransaction,
       newBudget,
-      totalBalance,
-      monthlyIncome,
-      monthlyExpenses,
       budgetStatus,
-      totalIncome,
-      totalExpenses,
-      totalSavings,
-      recentTransactions,
       budgetAlerts,
       username,
       formatDate,
+      formatMoney,
       addTransaction,
       addBudget,
       categoryChart,
       monthlyChart,
       hasCategoryChartData,
       hasMonthlyChartData,
-      showSuccessMessage,
-      successMessage,
-      isSmartSuggested,
       isBudgetSmartSuggested,
+      suggestCategory,
       suggestBudgetCategory,
       refreshDashboard,
-      refreshChartsForCurrentMonth,
-      setCurrentMonth,
       goToCurrentMonth,
       previousMonth,
       nextMonth,
       currentMonthDisplay,
-      currentMonthIncome,
-      currentMonthExpenses,
       currentMonthBalance,
       currentMonthTransactions,
-      currentMonthBudgets,
-      quickForm,
-      quickSaving,
-      quickAdd,
+      kpiItems,
+      dashboardLoading,
       dueSoonBills,
       budgetHealthItems,
       attentionBudgets,

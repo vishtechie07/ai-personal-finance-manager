@@ -37,6 +37,7 @@ services:
       APP_STORAGE_PATH: /app/uploads
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      APP_SEED_DEMO_ENABLED: ${APP_SEED_DEMO_ENABLED:-false}
     volumes:
       - pfm_uploads:/app/uploads
     depends_on:

@@ -92,28 +92,17 @@
   .form-label {
     @apply block text-sm font-medium text-slate-600 mb-2;
   }
-  .text-primary-600 {
-    @apply text-blue-600;
+
+  .dashboard-card {
+    @apply bg-white border border-slate-200/90 rounded-xl shadow-sm;
   }
-  
-  .text-primary-700 {
-    @apply text-blue-700;
+
+  .category-pill {
+    @apply inline-flex items-center rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-medium text-slate-700;
   }
-  
-  .bg-primary-600 {
-    @apply bg-blue-600;
-  }
-  
-  .bg-primary-700 {
-    @apply bg-blue-700;
-  }
-  
-  .ring-primary-500 {
-    @apply ring-blue-500;
-  }
-  
-  .ring-primary-300 {
-    @apply ring-blue-300;
+
+  .tabular-nums {
+    font-variant-numeric: tabular-nums;
   }
   
   .text-danger-600 {
