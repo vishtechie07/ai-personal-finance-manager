@@ -110,4 +110,4 @@ Receipt files are stored on disk at `APP_STORAGE_PATH` (default `/app/uploads`).
 | DB connection errors | Use **Internal** host (not External URL); verify `SPRING_PROFILES_ACTIVE=render` |
 | CORS errors from browser | Set `CORS_ALLOWED_ORIGIN_PATTERNS` to your exact Render URL or `https://*.onrender.com` |
 | Login works locally but not on Render | Confirm `JWT_SECRET` is set and unchanged between deploys |
-| Cold start timeout on free tier | Wait up to 60 s on first request after idle; upgrade instance to avoid sleep |
+| Cold start timeout on free tier | Wait up to 60 s on first request after idle; upgrade instance to avoid sleep. Auth signup/login use a **90 s** client timeout and show a waking-up message. |

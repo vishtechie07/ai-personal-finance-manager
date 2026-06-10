@@ -283,6 +283,7 @@ import GoogleSignInButton from "./components/GoogleSignInButton.vue";
 import AppBootOverlay from "./components/AppBootOverlay.vue";
 import SampleDataBanner from "./components/SampleDataBanner.vue";
 import { usePublicConfig } from "./composables/usePublicConfig";
+import { warmupServer } from "./composables/authTimeout";
 
 const authStore = useAuthStore();
 const router = useRouter();
@@ -347,7 +348,7 @@ const loginWithGoogle = async (credential) => {
         : "/dashboard";
     await router.push(redirect);
   } catch (error) {
-    loginError.value = getApiErrorMessage(error, { auth: "google" });
+    loginError.value = getApiErrorMessage(error, { auth: "google", coldStart: true });
     toast.error(loginError.value);
   }
 };
@@ -370,7 +371,7 @@ const login = async () => {
         : "/dashboard";
     await router.push(redirect);
   } catch (error) {
-    loginError.value = getApiErrorMessage(error, { auth: "login" });
+    loginError.value = getApiErrorMessage(error, { auth: "login", coldStart: true });
     toast.error(loginError.value);
   }
 };
@@ -394,6 +395,7 @@ watch(
 
 onMounted(() => {
   loadPublicConfig();
+  warmupServer();
   if (authStore.token) {
     authStore.checkAuth({ coldStart: true });
   }

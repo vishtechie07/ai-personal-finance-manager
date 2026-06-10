@@ -31,6 +31,9 @@ export function getApiErrorMessage(err, context = {}) {
       if (context.auth === "register") {
         return "Could not create your account. Check your details and try again.";
       }
+      if (context.auth === "login") {
+        return "Invalid username or password.";
+      }
       return "Invalid username or password.";
     case 403:
       return "Access denied. You may need to sign in again.";

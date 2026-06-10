@@ -137,6 +137,7 @@ import { useAuthStore } from "../stores/auth";
 import { useToast } from "../composables/useToast";
 import { usePublicConfig } from "../composables/usePublicConfig";
 import { getApiErrorMessage } from "../utils/apiError";
+import { warmupServer } from "../composables/authTimeout";
 import GoogleSignInButton from "../components/GoogleSignInButton.vue";
 
 const router = useRouter();
@@ -154,7 +155,10 @@ const form = ref({
 
 const error = ref(null);
 
-onMounted(() => loadPublicConfig());
+onMounted(() => {
+  warmupServer();
+  loadPublicConfig();
+});
 
 const onGoogle = async (credential) => {
   error.value = null;
@@ -163,7 +167,7 @@ const onGoogle = async (credential) => {
     toast.success("Signed in with Google!");
     await router.push("/dashboard");
   } catch (e) {
-    error.value = getApiErrorMessage(e, { auth: "google" });
+    error.value = getApiErrorMessage(e, { auth: "google", coldStart: true });
     toast.error(error.value);
   }
 };
@@ -186,7 +190,7 @@ const onRegister = async () => {
     toast.success("Account created!");
     await router.push("/dashboard");
   } catch (e) {
-    error.value = getApiErrorMessage(e, { auth: "register" });
+    error.value = getApiErrorMessage(e, { auth: "register", coldStart: true });
     toast.error(error.value);
   }
 };

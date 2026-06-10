@@ -2,8 +2,12 @@ import { defineStore } from "pinia";
 import { ref, computed } from "vue";
 import axios from "axios";
 import { markSampleBannerPending } from "../composables/useOnboarding";
+import {
+  authRequestOptions,
+  DEFAULT_API_TIMEOUT_MS,
+} from "../composables/authTimeout";
 
-axios.defaults.timeout = 10000;
+axios.defaults.timeout = DEFAULT_API_TIMEOUT_MS;
 axios.defaults.baseURL = import.meta.env.VITE_API_URL || "/api";
 
 export const useAuthStore = defineStore("auth", () => {
@@ -22,13 +26,16 @@ export const useAuthStore = defineStore("auth", () => {
     axios.defaults.headers.common["Authorization"] = `Bearer ${token.value}`;
   }
 
-  const login = async (username, password) => {
+  const login = async (username, password, options = {}) => {
+    const { timeout, coldStart } = authRequestOptions(options);
     isLoading.value = true;
+    isBooting.value = coldStart;
     try {
-      const response = await axios.post("/auth/login", {
-        username,
-        password,
-      });
+      const response = await axios.post(
+        "/auth/login",
+        { username, password },
+        { timeout },
+      );
 
       const { token: authToken, user: userData } = response.data;
 
@@ -42,6 +49,7 @@ export const useAuthStore = defineStore("auth", () => {
       return userData;
     } finally {
       isLoading.value = false;
+      isBooting.value = false;
     }
   };
 
@@ -55,10 +63,10 @@ export const useAuthStore = defineStore("auth", () => {
   const checkAuth = async (options = {}) => {
     if (!token.value) return false;
 
-    const timeoutMs = options.coldStart ? 90000 : 10000;
-    isBooting.value = !!options.coldStart;
+    const { timeout, coldStart } = authRequestOptions(options);
+    isBooting.value = coldStart;
     try {
-      const response = await axios.get("/auth/me", { timeout: timeoutMs });
+      const response = await axios.get("/auth/me", { timeout });
       user.value = response.data;
       return true;
     } catch {
@@ -69,10 +77,16 @@ export const useAuthStore = defineStore("auth", () => {
     }
   };
 
-  const loginWithGoogle = async (credential) => {
+  const loginWithGoogle = async (credential, options = {}) => {
+    const { timeout, coldStart } = authRequestOptions(options);
     isLoading.value = true;
+    isBooting.value = coldStart;
     try {
-      const response = await axios.post("/auth/google", { credential });
+      const response = await axios.post(
+        "/auth/google",
+        { credential },
+        { timeout },
+      );
       const { token: authToken, user: userData } = response.data;
       token.value = authToken;
       user.value = userData;
@@ -82,13 +96,18 @@ export const useAuthStore = defineStore("auth", () => {
       return userData;
     } finally {
       isLoading.value = false;
+      isBooting.value = false;
     }
   };
 
-  const register = async (userData) => {
+  const register = async (userData, options = {}) => {
+    const { timeout, coldStart } = authRequestOptions(options);
     isLoading.value = true;
+    isBooting.value = coldStart;
     try {
-      const response = await axios.post("/auth/register", userData);
+      const response = await axios.post("/auth/register", userData, {
+        timeout,
+      });
       const { token: authToken, user: newUser } = response.data;
 
       token.value = authToken;
@@ -101,6 +120,7 @@ export const useAuthStore = defineStore("auth", () => {
       return newUser;
     } finally {
       isLoading.value = false;
+      isBooting.value = false;
     }
   };
 

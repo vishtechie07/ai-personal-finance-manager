@@ -1,5 +1,6 @@
 import { ref } from "vue";
 import axios from "axios";
+import { AUTH_COLD_START_TIMEOUT_MS } from "./authTimeout";
 
 const config = ref(null);
 let loadPromise = null;
@@ -9,7 +10,7 @@ export function usePublicConfig() {
     if (config.value) return config.value;
     if (!loadPromise) {
       loadPromise = axios
-        .get("/config/public")
+        .get("/config/public", { timeout: AUTH_COLD_START_TIMEOUT_MS })
         .then((res) => {
           config.value = res.data;
           return config.value;
