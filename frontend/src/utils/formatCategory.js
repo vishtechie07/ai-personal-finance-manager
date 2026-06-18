@@ -20,7 +20,11 @@ const LABELS = {
 
 export function formatCategoryLabel(category) {
   if (!category) return "Other";
-  return LABELS[category] || category.replace(/_/g, " ").toLowerCase().replace(/^\w/, (c) => c.toUpperCase());
+  if (LABELS[category]) return LABELS[category];
+  return category
+    .replace(/_/g, " ")
+    .toLowerCase()
+    .replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
 export function formatMoney(value) {

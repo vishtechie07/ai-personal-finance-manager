@@ -56,6 +56,29 @@
 
     <DashboardKpiGrid :items="kpiItems" :loading="dashboardLoading" />
 
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+      <DashboardBriefPanel
+        class="lg:col-span-2"
+        :brief-bullets="briefBullets"
+        :brief-recommendation="briefRecommendation"
+        :loading="briefLoading"
+        :year-month="briefYearMonth"
+        :month-label="currentMonthDisplay"
+        @generate="generateBrief"
+      />
+      <DashboardForecastPanel
+        class="lg:col-span-3"
+        :month-label="currentMonthDisplay"
+        :forecast-expense="forecastExpense"
+        :current-expenses="currentMonthExpenses"
+        :burn-items="burnItems"
+        :mom-deltas="momDeltas"
+        :bill-timeline="billTimeline"
+      />
+    </div>
+
+    <OnboardingWizard :show="showOnboarding" @done="showOnboarding = false" />
+
     <div class="grid grid-cols-1 xl:grid-cols-3 gap-6 mb-6">
       <div class="xl:col-span-2 grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div class="dashboard-card p-6 h-[22rem] flex flex-col">
@@ -392,11 +415,22 @@ import {
 import { useBillsStore } from "../stores/bills";
 import { useToast } from "../composables/useToast";
 import { getApiErrorMessage } from "../utils/apiError";
-import { formatMoney } from "../utils/formatCategory";
+import { aiSourceMessage } from "../utils/aiSourceMessage";
+import { formatMoney, formatCategoryLabel } from "../utils/formatCategory";
+import { chartFont, doughnutTooltipLabel } from "../utils/chartTheme";
+import {
+  monthEndExpenseForecast,
+  budgetBurnInsights,
+  categoryMonthOverMonth,
+  billCashflowTimeline,
+} from "../utils/forecastHelpers";
 import DashboardHeader from "../components/dashboard/DashboardHeader.vue";
 import DashboardKpiGrid from "../components/dashboard/DashboardKpiGrid.vue";
 import DashboardTodayPanel from "../components/dashboard/DashboardTodayPanel.vue";
 import DashboardRecentTransactions from "../components/dashboard/DashboardRecentTransactions.vue";
+import DashboardBriefPanel from "../components/dashboard/DashboardBriefPanel.vue";
+import DashboardForecastPanel from "../components/dashboard/DashboardForecastPanel.vue";
+import OnboardingWizard from "../components/OnboardingWizard.vue";
 
 const CHART_PALETTE = [
   "#4f46e5",
@@ -420,6 +454,9 @@ export default {
     DashboardKpiGrid,
     DashboardTodayPanel,
     DashboardRecentTransactions,
+    DashboardBriefPanel,
+    DashboardForecastPanel,
+    OnboardingWizard,
   },
   setup() {
     const authStore = useAuthStore();
@@ -428,7 +465,12 @@ export default {
     const billsStore = useBillsStore();
     const router = useRouter();
     const toast = useToast();
+    const briefBullets = ref([]);
+    const briefRecommendation = ref("");
+    const briefLoading = ref(false);
+    const showOnboarding = ref(true);
     const priorMonthStats = ref({ income: 0, expenses: 0, balance: 0 });
+    const priorMonthTxs = ref([]);
 
     const dueSoonBills = computed(() => billsStore.dueSoon);
 
@@ -675,10 +717,35 @@ export default {
           .filter((t) => t.type === "EXPENSE")
           .reduce((sum, t) => sum + parseFloat(t.amount || 0), 0);
         priorMonthStats.value = { income, expenses, balance: income - expenses };
+        priorMonthTxs.value = txs;
       } catch {
         priorMonthStats.value = { income: 0, expenses: 0, balance: 0 };
+        priorMonthTxs.value = [];
       }
     };
+
+    const forecastExpense = computed(() =>
+      monthEndExpenseForecast(
+        currentMonthExpenses.value,
+        transactionsStore?.currentMonth ?? new Date().getMonth(),
+        transactionsStore?.currentYear ?? new Date().getFullYear(),
+      ),
+    );
+
+    const burnItems = computed(() =>
+      budgetBurnInsights(currentMonthBudgets.value),
+    );
+
+    const momDeltas = computed(() =>
+      categoryMonthOverMonth(
+        currentMonthTransactions.value,
+        priorMonthTxs.value,
+      ),
+    );
+
+    const billTimeline = computed(() =>
+      billCashflowTimeline(billsStore.bills || []),
+    );
 
     // Compute budget status from the budgets store
     const budgetStatus = computed(() => {
@@ -871,10 +938,10 @@ export default {
             }
           });
 
-        const labels = Object.keys(categoryData);
+        const labels = Object.keys(categoryData).map(formatCategoryLabel);
         const data = Object.values(categoryData);
+        const total = data.reduce((a, b) => a + b, 0);
 
-        // Create the chart
         spendingChart = new Chart(ctx, {
           type: "doughnut",
           data: {
@@ -895,18 +962,19 @@ export default {
               legend: {
                 position: "bottom",
                 labels: {
-                  padding: 20,
+                  padding: 16,
                   usePointStyle: true,
                   color: "#475569",
+                  font: chartFont(11),
+                  boxWidth: 10,
                 },
               },
-              title: {
-                display: true,
-                text: `Spending by Category - ${currentMonthDisplay.value}`,
-                color: "#0f172a",
-                font: {
-                  size: 16,
-                  weight: "bold",
+              title: { display: false },
+              tooltip: {
+                titleFont: chartFont(13, "600"),
+                bodyFont: chartFont(12),
+                callbacks: {
+                  label: (ctx) => doughnutTooltipLabel(ctx, formatMoney),
                 },
               },
             },
@@ -1002,38 +1070,27 @@ export default {
                 labels: {
                   usePointStyle: true,
                   color: "#475569",
+                  font: chartFont(11),
                 },
               },
-              title: {
-                display: true,
-                text: "Monthly Overview - Last 6 Months",
-                color: "#0f172a",
-                font: {
-                  size: 16,
-                  weight: "bold",
-                },
+              title: { display: false },
+              tooltip: {
+                titleFont: chartFont(13, "600"),
+                bodyFont: chartFont(12),
               },
             },
             scales: {
-              y: {
-                beginAtZero: true,
-                grid: {
-                  color: "rgba(148, 163, 184, 0.25)",
-                },
-                ticks: {
-                  color: "#64748b",
-                  callback: function (value) {
-                    return "$" + value.toLocaleString();
-                  },
-                },
-              },
               x: {
-                grid: {
-                  color: "rgba(148, 163, 184, 0.15)",
-                },
+                ticks: { font: chartFont(10), color: "#64748b" },
+                grid: { color: "#f1f5f9" },
+              },
+              y: {
                 ticks: {
+                  font: chartFont(10),
                   color: "#64748b",
+                  callback: (v) => "$" + Number(v).toLocaleString(),
                 },
+                grid: { color: "#f1f5f9" },
               },
             },
           },
@@ -1058,6 +1115,7 @@ export default {
         if (!budgetsStore.isInitialized) {
           await budgetsStore.fetchBudgets();
         }
+        await billsStore.fetchBills();
         await billsStore.fetchDueSoon();
         await loadPriorMonthStats();
       } catch (error) {
@@ -1256,10 +1314,34 @@ export default {
         budgetsStore.nextMonth();
       }
 
-      // Force chart update after month navigation
       setTimeout(() => {
         refreshChartsForCurrentMonth();
       }, 150);
+    };
+
+    const briefYearMonth = computed(() => {
+      const m = String((transactionsStore?.currentMonth ?? new Date().getMonth()) + 1).padStart(2, "0");
+      return `${transactionsStore?.currentYear ?? new Date().getFullYear()}-${m}`;
+    });
+
+    const generateBrief = async () => {
+      briefLoading.value = true;
+      try {
+        const { data } = await axios.post("/ai/monthly-brief", {
+          yearMonth: briefYearMonth.value,
+        });
+        briefBullets.value = Array.isArray(data?.bullets) ? data.bullets : [];
+        briefRecommendation.value = data?.recommendation || "";
+        if (data?.source?.startsWith("openai")) toast.success("Monthly brief ready");
+        else {
+          const msg = aiSourceMessage(data?.source);
+          if (msg) toast.error(msg);
+        }
+      } catch (e) {
+        toast.error(getApiErrorMessage(e));
+      } finally {
+        briefLoading.value = false;
+      }
     };
 
     return {
@@ -1293,6 +1375,17 @@ export default {
       dueSoonBills,
       budgetHealthItems,
       attentionBudgets,
+      briefBullets,
+      briefRecommendation,
+      briefLoading,
+      briefYearMonth,
+      generateBrief,
+      showOnboarding,
+      forecastExpense,
+      currentMonthExpenses,
+      burnItems,
+      momDeltas,
+      billTimeline,
     };
   },
 };

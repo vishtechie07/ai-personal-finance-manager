@@ -37,11 +37,10 @@
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="text-center mb-16">
           <h2 class="text-3xl md:text-4xl font-bold text-slate-900 mb-4">
-            Smart Features for Smarter Finances
+            What you can do with SpendSense
           </h2>
           <p class="text-xl text-slate-600 max-w-2xl mx-auto">
-            Our smart technology learns your spending patterns and provides
-            personalized insights
+            Practical tools to log spending, set budgets, and see where your money goes.
           </p>
         </div>
 
@@ -70,8 +69,7 @@
               Smart Categorization
             </h3>
             <p class="text-slate-600">
-              Automatically categorize your transactions with intelligent
-              pattern recognition.
+              Keyword rules plus optional AI suggestions — no bank login required.
             </p>
           </div>
 
@@ -96,11 +94,10 @@
               </svg>
             </div>
             <h3 class="text-lg font-semibold text-slate-900 mb-2">
-              Anomaly Detection
+              Spending alerts
             </h3>
             <p class="text-slate-600">
-              Detect unusual spending patterns and potential fraud with smart
-              analysis.
+              Budget warnings, duplicate charge detection, and bill due reminders.
             </p>
           </div>
 
@@ -125,11 +122,10 @@
               </svg>
             </div>
             <h3 class="text-lg font-semibold text-slate-900 mb-2">
-              Predictive Insights
+              Monthly insights
             </h3>
             <p class="text-slate-600">
-              Get forecasts of future spending and personalized financial
-              recommendations.
+              Charts, budget health, and an optional AI monthly brief from your data.
             </p>
           </div>
 
@@ -154,11 +150,10 @@
               </svg>
             </div>
             <h3 class="text-lg font-semibold text-slate-900 mb-2">
-              Smart Budgeting
+              Budget tracking
             </h3>
             <p class="text-slate-600">
-              Create and monitor budgets with smart spending predictions and
-              alerts.
+              Set monthly limits per category and see burn rate and alerts as you spend.
             </p>
           </div>
 
@@ -183,10 +178,10 @@
               </svg>
             </div>
             <h3 class="text-lg font-semibold text-slate-900 mb-2">
-              Beautiful Charts
+              Clear charts
             </h3>
             <p class="text-slate-600">
-              Visualize your financial data with interactive charts and graphs.
+              Category breakdowns and six-month trends from the transactions you enter.
             </p>
           </div>
 
@@ -211,11 +206,10 @@
               </svg>
             </div>
             <h3 class="text-lg font-semibold text-slate-900 mb-2">
-              Bank-Level Security
+              Secure sign-in
             </h3>
             <p class="text-slate-600">
-              Your data is protected with enterprise-grade security and
-              encryption.
+              Your account is protected with encrypted passwords and standard web security practices.
             </p>
           </div>
         </div>
@@ -226,18 +220,17 @@
     <section class="py-20 bg-gradient-to-br from-primary-600 to-indigo-700">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
         <h2 class="text-3xl md:text-4xl font-bold text-white mb-4">
-          Ready to Transform Your Finances?
+          Start tracking on your terms
         </h2>
         <p class="text-xl text-primary-100 mb-8 max-w-2xl mx-auto">
-          Join thousands of users who are already saving money and making better
-          financial decisions
+          SpendSense is free to try — create an account, add a few transactions, and see if it fits how you manage money.
         </p>
         <button
           type="button"
           class="btn-secondary text-base py-3.5 px-8 min-h-[3rem] shadow-lg"
           @click="getStarted"
         >
-          Start Your Free Trial
+          Create free account
         </button>
       </div>
     </section>
