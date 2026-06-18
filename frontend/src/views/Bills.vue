@@ -59,6 +59,7 @@
               Due {{ formatDate(bill.dueDate) }} · ${{
                 Number(bill.amount).toFixed(2)
               }}
+              <span v-if="bill.recurring" class="ml-1 text-primary-600">· Recurring</span>
             </p>
           </div>
           <div class="flex items-center gap-2">
@@ -72,6 +73,14 @@
               class="text-xs font-medium text-amber-700 bg-amber-100 px-2 py-1 rounded"
               >Unpaid</span
             >
+            <button
+              v-if="!bill.paid"
+              type="button"
+              class="btn-secondary btn-sm"
+              @click="openEdit(bill)"
+            >
+              Edit
+            </button>
             <button
               v-if="!bill.paid"
               type="button"
@@ -185,6 +194,10 @@
               required
             />
           </div>
+          <label class="flex items-center gap-2 text-sm text-slate-700">
+            <input v-model="form.recurring" type="checkbox" class="rounded" />
+            Recurring monthly (rolls due date forward when marked paid)
+          </label>
           <div class="flex gap-3 pt-2">
             <button
               type="button"
@@ -220,7 +233,7 @@ const creatingRecurring = ref(false);
 const showRecurringModal = ref(false);
 const recurringSuggestions = ref([]);
 const selectedRecurring = ref([]);
-const form = ref({ payeeName: "", amount: "", dueDate: "" });
+const form = ref({ payeeName: "", amount: "", dueDate: "", recurring: false });
 
 const formatDate = (d) => {
   if (!d) return "—";
@@ -231,7 +244,18 @@ const formatDate = (d) => {
 
 const openCreate = () => {
   editingId.value = null;
-  form.value = { payeeName: "", amount: "", dueDate: "" };
+  form.value = { payeeName: "", amount: "", dueDate: "", recurring: false };
+  showModal.value = true;
+};
+
+const openEdit = (bill) => {
+  editingId.value = bill.id;
+  form.value = {
+    payeeName: bill.payeeName,
+    amount: bill.amount,
+    dueDate: bill.dueDate?.split?.("T")?.[0] || bill.dueDate,
+    recurring: !!bill.recurring,
+  };
   showModal.value = true;
 };
 
@@ -263,6 +287,7 @@ const createSelectedRecurring = async () => {
         amount: s.amount,
         dueDate: s.suggestedDueDate,
         paid: false,
+        recurring: true,
       });
     }
     toast.success("Recurring bills added");

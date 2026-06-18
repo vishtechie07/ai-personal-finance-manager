@@ -174,6 +174,18 @@ export const useBudgetsStore = defineStore("budgets", () => {
     }
   };
 
+  const updateBudget = async (id, budgetData) => {
+    const response = await axios.put(`/budgets/${id}`, budgetData);
+    const idx = budgets.value.findIndex((b) => b.id === id);
+    if (idx !== -1) budgets.value[idx] = response.data;
+    return response.data;
+  };
+
+  const deleteBudget = async (id) => {
+    await axios.delete(`/budgets/${id}`);
+    budgets.value = budgets.value.filter((b) => b.id !== id);
+  };
+
   const refreshData = async () => {
     isInitialized.value = false;
     await fetchBudgets();
@@ -199,6 +211,8 @@ export const useBudgetsStore = defineStore("budgets", () => {
     currentMonthRemainingAmount,
     fetchBudgets,
     addBudget,
+    updateBudget,
+    deleteBudget,
     refreshData,
     setCurrentMonth,
     goToCurrentMonth,

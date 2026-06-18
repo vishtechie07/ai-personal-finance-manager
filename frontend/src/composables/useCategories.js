@@ -1,0 +1,21 @@
+export const TRANSACTION_CATEGORIES = [
+  "FOOD_GROCERIES",
+  "FOOD_RESTAURANT",
+  "TRANSPORTATION",
+  "HOUSING_RENT",
+  "HOUSING_UTILITIES",
+  "HOUSING_MAINTENANCE",
+  "HEALTHCARE",
+  "ENTERTAINMENT",
+  "SHOPPING",
+  "EDUCATION",
+  "TRAVEL",
+  "INSURANCE",
+  "INVESTMENTS",
+  "SALARY",
+  "FREELANCE",
+  "BUSINESS",
+  "OTHER",
+];
+
+export { formatCategoryLabel, formatMoney } from "../utils/formatCategory";

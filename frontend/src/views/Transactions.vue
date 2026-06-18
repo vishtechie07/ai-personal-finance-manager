@@ -7,7 +7,13 @@
         <h1 class="text-3xl font-bold text-slate-900">Transactions</h1>
         <p class="text-slate-600 mt-2">Manage your financial transactions</p>
       </div>
-      <button type="button" class="btn-primary shrink-0" @click="openModal()">
+      <div class="flex flex-wrap gap-2 shrink-0">
+        <button type="button" class="btn-secondary" @click="exportCsv">Export CSV</button>
+        <label class="btn-secondary cursor-pointer">
+          Import CSV
+          <input type="file" accept=".csv,text/csv" class="hidden" @change="importCsv" />
+        </label>
+        <button type="button" class="btn-primary" @click="openModal()">
         <svg
           fill="none"
           stroke="currentColor"
@@ -23,6 +29,7 @@
         </svg>
         <span>Add Transaction</span>
       </button>
+      </div>
     </div>
 
     <div class="glass-card p-4 space-y-4">
@@ -66,7 +73,7 @@
           @change="applyFilters"
         >
           <option value="">All categories</option>
-          <option v-for="c in categories" :key="c" :value="c">{{ c }}</option>
+          <option v-for="c in TRANSACTION_CATEGORIES" :key="c" :value="c">{{ formatCategoryLabel(c) }}</option>
         </select>
         <select
           v-model="localFilters.type"
@@ -104,7 +111,7 @@
             <p class="font-medium text-slate-900">
               {{ transaction.description }}
             </p>
-            <p class="text-sm text-slate-500">{{ transaction.category }}</p>
+            <p class="text-sm text-slate-500">{{ formatCategoryLabel(transaction.category) }}</p>
           </div>
           <div class="flex items-center gap-4">
             <div class="text-right">
@@ -163,6 +170,7 @@
             class="input-field w-full"
             placeholder="Description"
             required
+            @blur="suggestCategoryForForm"
           />
           <input
             v-model.number="form.amount"
@@ -182,24 +190,22 @@
             class="input-field w-full"
             required
           />
-          <div class="space-y-2">
-            <input
-              v-model="form.category"
-              class="input-field w-full"
-              placeholder="Category"
-              required
-            />
-            <button
-              v-if="form.description && form.description.length > 2"
-              type="button"
-              class="text-xs text-primary-600 hover:text-primary-700 font-medium"
-              @click="suggestCategoryForForm"
-            >
-              Suggest category from description
-            </button>
-          </div>
-          <div v-if="editingId" class="space-y-2 border-t pt-3">
-            <label class="text-sm font-medium text-slate-700">Receipt</label>
+          <select v-model="form.category" class="input-field w-full" required>
+            <option disabled value="">Select category</option>
+            <option v-for="c in TRANSACTION_CATEGORIES" :key="c" :value="c">
+              {{ formatCategoryLabel(c) }}
+            </option>
+          </select>
+          <button
+            v-if="form.description && form.description.length > 2"
+            type="button"
+            class="text-xs text-primary-600 hover:text-primary-700 font-medium"
+            @click="suggestCategoryForForm"
+          >
+            Suggest category from description
+          </button>
+          <div class="space-y-2 border-t pt-3">
+            <label class="text-sm font-medium text-slate-700">Receipt (optional)</label>
             <input
               type="file"
               accept="image/*,application/pdf"
@@ -214,7 +220,7 @@
               Scan receipt (AI)
             </button>
             <a
-              v-if="hasReceipt"
+              v-if="editingId && hasReceipt"
               :href="receiptUrl"
               target="_blank"
               class="text-sm text-primary-600 block"
@@ -247,6 +253,7 @@ import { useTransactionsStore } from "../stores/transactions";
 import { useBudgetsStore } from "../stores/budgets";
 import { useToast } from "../composables/useToast";
 import { getApiErrorMessage } from "../utils/apiError";
+import { aiSourceMessage } from "../utils/aiSourceMessage";
 import {
   resolveCategory,
   TRANSACTION_KEYWORDS,
@@ -257,24 +264,10 @@ const budgetsStore = useBudgetsStore();
 const route = useRoute();
 const toast = useToast();
 
-const categories = [
-  "FOOD_GROCERIES",
-  "FOOD_RESTAURANT",
-  "TRANSPORTATION",
-  "HOUSING_RENT",
-  "HOUSING_UTILITIES",
-  "HOUSING_MAINTENANCE",
-  "HEALTHCARE",
-  "ENTERTAINMENT",
-  "SHOPPING",
-  "EDUCATION",
-  "TRAVEL",
-  "INSURANCE",
-  "INVESTMENTS",
-  "SALARY",
-  "FREELANCE",
-  "OTHER",
-];
+import {
+  TRANSACTION_CATEGORIES,
+  formatCategoryLabel,
+} from "../composables/useCategories";
 
 const showModal = ref(false);
 const editingId = ref(null);
@@ -388,6 +381,13 @@ const scanReceipt = async () => {
   fd.append("file", receiptFile.value);
   try {
     const res = await axios.post("/ai/extract-receipt", fd);
+    if (res.data?.source && !res.data.source.startsWith("openai")) {
+      const msg = aiSourceMessage(res.data.source);
+      if (msg) {
+        toast.error(msg);
+        return;
+      }
+    }
     if (res.data?.description) form.value.description = res.data.description;
     if (res.data?.amount) form.value.amount = res.data.amount;
     if (res.data?.date) form.value.transactionDate = res.data.date;
@@ -405,16 +405,44 @@ const uploadReceipt = async (txId) => {
 };
 
 const suggestCategoryForForm = async () => {
+  if (!form.value.description || form.value.description.length < 3) return;
   const cat = await resolveCategory(
     form.value.description,
     TRANSACTION_KEYWORDS,
   );
-  if (cat) {
-    form.value.category = cat;
-    toast.success(`Suggested: ${cat}`);
-  } else {
-    toast.error("No match — try a clearer description or pick a category.");
+  if (cat) form.value.category = cat;
+};
+
+const exportCsv = async () => {
+  try {
+    const { data } = await axios.get("/transactions/export", {
+      responseType: "text",
+    });
+    const blob = new Blob([data], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "transactions.csv";
+    a.click();
+    URL.revokeObjectURL(url);
+  } catch (e) {
+    toast.error(getApiErrorMessage(e));
   }
+};
+
+const importCsv = async (e) => {
+  const file = e.target.files?.[0];
+  if (!file) return;
+  const text = await file.text();
+  try {
+    const { data } = await axios.post("/transactions/import", { csv: text });
+    toast.success(`Imported ${data.imported} transactions`);
+    await transactionsStore.fetchTransactionsForMonth();
+    await budgetsStore.fetchBudgets();
+  } catch (err) {
+    toast.error(getApiErrorMessage(err));
+  }
+  e.target.value = "";
 };
 
 const save = async () => {
@@ -476,5 +504,6 @@ onMounted(async () => {
   transactionsStore.setFilters(localFilters.value);
   await transactionsStore.fetchTransactionsForMonth();
   if (!budgetsStore.isInitialized) await budgetsStore.fetchBudgets();
+  if (route.query.add === "1") openModal();
 });
 </script>

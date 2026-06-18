@@ -179,8 +179,16 @@
 
           <div class="mt-4 pt-4 border-t border-gray-200">
             <div class="flex justify-between text-xs text-slate-500">
-              <span>{{ budget.category }}</span>
+              <span>{{ formatCategoryLabel(budget.category) }}</span>
               <span>{{ budget.period }}</span>
+            </div>
+            <div class="mt-4 flex gap-2">
+              <button type="button" class="btn-secondary btn-sm flex-1" @click="openEditBudget(budget)">
+                Edit
+              </button>
+              <button type="button" class="text-xs text-red-600 hover:underline py-2" @click="removeBudget(budget.id)">
+                Delete
+              </button>
             </div>
             <div class="text-xs text-gray-400 mt-1">
               {{ formatDate(budget.startDate) }} -
@@ -350,13 +358,17 @@
 import { ref, computed, watch, onMounted } from "vue";
 import { useBudgetsStore } from "../stores/budgets";
 import { useTransactionsStore } from "../stores/transactions";
+import { formatCategoryLabel } from "../composables/useCategories";
+import { useToast } from "../composables/useToast";
 
 export default {
   name: "Budgets",
   setup() {
     const budgetsStore = useBudgetsStore();
     const transactionsStore = useTransactionsStore();
+    const toast = useToast();
     const showAddBudget = ref(false);
+    const editingBudgetId = ref(null);
 
     // Initialize month state from store or current date
     const currentMonth = ref(
@@ -641,7 +653,6 @@ export default {
       }
 
       try {
-        // Convert month string to start date
         const [year, month] = newBudget.value.startMonth.split("-");
         const startDate = new Date(parseInt(year), parseInt(month) - 1, 1);
 
@@ -653,10 +664,16 @@ export default {
           startDate: startDate.toISOString(),
         };
 
-        // Use the shared store to add the budget
-        await budgetsStore.addBudget(budgetData);
+        if (editingBudgetId.value) {
+          await budgetsStore.updateBudget(editingBudgetId.value, budgetData);
+          toast.success("Budget updated");
+        } else {
+          await budgetsStore.addBudget(budgetData);
+          toast.success("Budget created");
+        }
 
         showAddBudget.value = false;
+        editingBudgetId.value = null;
         newBudget.value = {
           name: "",
           amount: "",
@@ -665,7 +682,30 @@ export default {
           startMonth: new Date().toISOString().slice(0, 7),
         };
       } catch (error) {
-        console.error("Failed to add budget:", error);
+        toast.error("Failed to save budget");
+      }
+    };
+
+    const openEditBudget = (budget) => {
+      editingBudgetId.value = budget.id;
+      const d = new Date(budget.startDate);
+      newBudget.value = {
+        name: budget.name,
+        amount: budget.amount,
+        category: budget.category,
+        period: budget.period || "MONTHLY",
+        startMonth: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`,
+      };
+      showAddBudget.value = true;
+    };
+
+    const removeBudget = async (id) => {
+      if (!confirm("Delete this budget?")) return;
+      try {
+        await budgetsStore.deleteBudget(id);
+        toast.success("Budget deleted");
+      } catch {
+        toast.error("Failed to delete budget");
       }
     };
 
@@ -753,6 +793,9 @@ export default {
       filteredBudgets,
       formatDate,
       addBudget,
+      openEditBudget,
+      removeBudget,
+      formatCategoryLabel,
       suggestCategory,
       previousMonth,
       nextMonth,

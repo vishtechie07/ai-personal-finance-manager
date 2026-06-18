@@ -67,14 +67,16 @@
 
 <script setup>
 import { ref, onMounted, onUnmounted } from "vue";
+import { useRouter } from "vue-router";
 import { useNotificationsStore } from "../stores/notifications";
 
 const store = useNotificationsStore();
+const router = useRouter();
 const open = ref(false);
 
 const toggle = async () => {
   open.value = !open.value;
-  if (open.value) await store.fetchNotifications();
+  if (open.value) await store.sync();
 };
 
 const markAll = async () => {
@@ -83,6 +85,8 @@ const markAll = async () => {
 
 const onClick = async (n) => {
   if (!n.read) await store.markRead(n.id);
+  open.value = false;
+  if (n.actionPath) router.push(n.actionPath);
 };
 
 const onDocClick = (e) => {
@@ -90,7 +94,7 @@ const onDocClick = (e) => {
 };
 
 onMounted(async () => {
-  await store.fetchNotifications();
+  await store.sync();
   document.addEventListener("click", onDocClick);
 });
 
