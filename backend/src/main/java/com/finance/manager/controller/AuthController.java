@@ -6,6 +6,7 @@ import com.finance.manager.repository.UserRepository;
 import com.finance.manager.service.DemoSeedService;
 import com.finance.manager.service.GoogleAuthService;
 import com.finance.manager.service.RegistrationAbuseService;
+import com.finance.manager.service.UserAccountService;
 import com.finance.manager.util.ClientIpResolver;
 import jakarta.servlet.http.HttpServletRequest;
 import com.finance.manager.security.AuthPrincipal;
@@ -20,6 +21,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -40,6 +42,7 @@ public class AuthController {
     private final GoogleAuthService googleAuthService;
     private final AuthProperties authProperties;
     private final RegistrationAbuseService registrationAbuseService;
+    private final UserAccountService userAccountService;
 
     public AuthController(
             UserRepository userRepository,
@@ -48,7 +51,8 @@ public class AuthController {
             DemoSeedService demoSeedService,
             GoogleAuthService googleAuthService,
             AuthProperties authProperties,
-            RegistrationAbuseService registrationAbuseService) {
+            RegistrationAbuseService registrationAbuseService,
+            UserAccountService userAccountService) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
@@ -56,6 +60,7 @@ public class AuthController {
         this.googleAuthService = googleAuthService;
         this.authProperties = authProperties;
         this.registrationAbuseService = registrationAbuseService;
+        this.userAccountService = userAccountService;
     }
 
     @PostMapping("/login")
@@ -91,8 +96,44 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
         return userRepository.findById(principal.userId())
-                .map(user -> ResponseEntity.ok(toUserInfo(user)))
+                .map(user -> ResponseEntity.ok(userAccountService.toUserInfo(user)))
                 .orElseGet(() -> ResponseEntity.status(HttpStatus.UNAUTHORIZED).build());
+    }
+
+    @PatchMapping("/me")
+    public ResponseEntity<Map<String, Object>> updateProfile(
+            @AuthenticationPrincipal AuthPrincipal principal,
+            @RequestBody @Valid UpdateProfileRequest request) {
+        if (principal == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        User updated = userAccountService.updateProfile(
+                principal.userId(), request.firstName(), request.lastName(), request.email());
+        return ResponseEntity.ok(userAccountService.toUserInfo(updated));
+    }
+
+    @PostMapping("/me/change-password")
+    public ResponseEntity<Map<String, Object>> changePassword(
+            @AuthenticationPrincipal AuthPrincipal principal,
+            @RequestBody @Valid ChangePasswordRequest request) {
+        if (principal == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        userAccountService.changePassword(
+                principal.userId(), request.currentPassword(), request.newPassword());
+        return ResponseEntity.ok(Map.of("changed", true));
+    }
+
+    @DeleteMapping("/me")
+    public ResponseEntity<Void> deleteAccount(
+            @AuthenticationPrincipal AuthPrincipal principal,
+            @RequestBody(required = false) DeleteAccountRequest request) {
+        if (principal == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        String password = request != null ? request.password() : null;
+        userAccountService.deleteAccount(principal.userId(), password);
+        return ResponseEntity.noContent().build();
     }
 
     @DeleteMapping("/me/sample-data")
@@ -154,21 +195,22 @@ public class AuthController {
     private Map<String, Object> tokenResponse(User user) {
         Map<String, Object> body = new HashMap<>();
         body.put("token", jwtService.generateToken(user));
-        body.put("user", toUserInfo(user));
+        body.put("user", userAccountService.toUserInfo(user));
         return body;
     }
 
-    private Map<String, Object> toUserInfo(User user) {
-        Map<String, Object> info = new HashMap<>();
-        info.put("id", user.getId());
-        info.put("username", user.getUsername());
-        info.put("email", user.getEmail());
-        info.put("firstName", user.getFirstName());
-        info.put("lastName", user.getLastName());
-        info.put("role", user.getRole());
-        info.put("authProvider", user.getAuthProvider());
-        return info;
-    }
+    public record UpdateProfileRequest(
+            String firstName,
+            String lastName,
+            @Email(message = "Email should be valid") String email
+    ) {}
+
+    public record ChangePasswordRequest(
+            @NotBlank String currentPassword,
+            @NotBlank @Size(min = 8, max = 128) String newPassword
+    ) {}
+
+    public record DeleteAccountRequest(String password) {}
 
     public record LoginRequest(
             @NotBlank(message = "Username is required")

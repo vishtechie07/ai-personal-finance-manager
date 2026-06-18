@@ -6,6 +6,7 @@ import com.finance.manager.repository.TransactionRepository;
 import com.finance.manager.repository.TransactionSpecifications;
 import com.finance.manager.repository.UserRepository;
 import com.finance.manager.service.BudgetSpentSyncService;
+import com.finance.manager.service.CategoryRuleService;
 import com.finance.manager.service.NotificationSyncService;
 import com.finance.manager.service.TransactionService;
 import org.springframework.data.domain.Sort;
@@ -24,16 +25,19 @@ public class TransactionServiceImpl implements TransactionService {
     private final UserRepository userRepository;
     private final BudgetSpentSyncService budgetSpentSyncService;
     private final NotificationSyncService notificationSyncService;
+    private final CategoryRuleService categoryRuleService;
 
     public TransactionServiceImpl(
             TransactionRepository transactionRepository,
             UserRepository userRepository,
             BudgetSpentSyncService budgetSpentSyncService,
-            NotificationSyncService notificationSyncService) {
+            NotificationSyncService notificationSyncService,
+            CategoryRuleService categoryRuleService) {
         this.transactionRepository = transactionRepository;
         this.userRepository = userRepository;
         this.budgetSpentSyncService = budgetSpentSyncService;
         this.notificationSyncService = notificationSyncService;
+        this.categoryRuleService = categoryRuleService;
     }
 
     @Override
@@ -42,7 +46,8 @@ public class TransactionServiceImpl implements TransactionService {
         User owner = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
         transaction.setOwner(owner);
         if (transaction.getCategory() == null) {
-            transaction.setCategory(Transaction.Category.OTHER);
+            transaction.setCategory(categoryRuleService.matchCategory(userId, transaction.getDescription())
+                    .orElse(Transaction.Category.OTHER));
         }
         Transaction saved = transactionRepository.save(transaction);
         afterMutation(userId, saved.getTransactionDate());

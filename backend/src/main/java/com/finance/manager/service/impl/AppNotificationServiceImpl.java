@@ -1,5 +1,6 @@
 package com.finance.manager.service.impl;
 
+import com.finance.manager.dto.NotificationView;
 import com.finance.manager.model.AppNotification;
 import com.finance.manager.repository.AppNotificationRepository;
 import com.finance.manager.service.AppNotificationService;
@@ -27,6 +28,12 @@ public class AppNotificationServiceImpl implements AppNotificationService {
     public List<AppNotification> list(Long userId) {
         notificationSyncService.syncForUser(userId);
         return notificationRepository.findByOwner_IdOrderByCreatedAtDesc(userId);
+    }
+
+    @Override
+    @Transactional
+    public List<NotificationView> listViews(Long userId) {
+        return list(userId).stream().map(NotificationView::from).toList();
     }
 
     @Override

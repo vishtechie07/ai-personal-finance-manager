@@ -108,6 +108,13 @@ public class BillServiceImpl implements BillService {
             bill.setLinkedTransaction(created);
         }
 
+        if (bill.isRecurring()) {
+            bill.setPaid(false);
+            bill.setPaidAt(null);
+            bill.setDueDate(bill.getDueDate().plusMonths(1));
+            bill.setLinkedTransaction(null);
+        }
+
         billRepository.save(bill);
         notificationSyncService.syncForUser(userId);
         return billRepository.findByIdAndOwner_Id(id, userId).orElse(bill);

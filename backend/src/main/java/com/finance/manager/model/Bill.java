@@ -36,6 +36,9 @@ public class Bill {
     @Column(nullable = false)
     private boolean paid = false;
 
+    @Column(nullable = false)
+    private boolean recurring = false;
+
     @Column(name = "paid_at")
     private LocalDateTime paidAt;
 
@@ -79,6 +82,8 @@ public class Bill {
     public void setDueDate(LocalDate dueDate) { this.dueDate = dueDate; }
     public boolean isPaid() { return paid; }
     public void setPaid(boolean paid) { this.paid = paid; }
+    public boolean isRecurring() { return recurring; }
+    public void setRecurring(boolean recurring) { this.recurring = recurring; }
     public LocalDateTime getPaidAt() { return paidAt; }
     public void setPaidAt(LocalDateTime paidAt) { this.paidAt = paidAt; }
     public Transaction getLinkedTransaction() { return linkedTransaction; }

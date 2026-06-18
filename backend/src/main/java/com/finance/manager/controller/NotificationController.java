@@ -1,6 +1,6 @@
 package com.finance.manager.controller;
 
-import com.finance.manager.model.AppNotification;
+import com.finance.manager.dto.NotificationView;
 import com.finance.manager.security.AuthPrincipal;
 import com.finance.manager.service.AppNotificationService;
 import org.springframework.http.ResponseEntity;
@@ -21,8 +21,8 @@ public class NotificationController {
     }
 
     @GetMapping
-    public ResponseEntity<List<AppNotification>> list(@AuthenticationPrincipal AuthPrincipal principal) {
-        return ResponseEntity.ok(notificationService.list(principal.userId()));
+    public ResponseEntity<List<NotificationView>> list(@AuthenticationPrincipal AuthPrincipal principal) {
+        return ResponseEntity.ok(notificationService.listViews(principal.userId()));
     }
 
     @GetMapping("/unread-count")

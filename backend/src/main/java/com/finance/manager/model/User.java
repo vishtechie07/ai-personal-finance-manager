@@ -57,6 +57,15 @@ public class User {
      */
     @Column(name = "openai_api_key_encrypted", columnDefinition = "TEXT")
     private String openaiApiKeyEncrypted;
+
+    @Column(name = "bill_reminders_enabled", nullable = false)
+    private boolean billRemindersEnabled = true;
+
+    @Column(name = "bill_reminder_days_before", nullable = false)
+    private int billReminderDaysBefore = 3;
+
+    @Column(name = "last_bill_reminder_sent_at")
+    private LocalDateTime lastBillReminderSentAt;
     
     @PrePersist
     protected void onCreate() {
@@ -171,6 +180,30 @@ public class User {
 
     public void setAuthProvider(AuthProvider authProvider) {
         this.authProvider = authProvider;
+    }
+
+    public boolean isBillRemindersEnabled() {
+        return billRemindersEnabled;
+    }
+
+    public void setBillRemindersEnabled(boolean billRemindersEnabled) {
+        this.billRemindersEnabled = billRemindersEnabled;
+    }
+
+    public int getBillReminderDaysBefore() {
+        return billReminderDaysBefore;
+    }
+
+    public void setBillReminderDaysBefore(int billReminderDaysBefore) {
+        this.billReminderDaysBefore = Math.max(1, Math.min(14, billReminderDaysBefore));
+    }
+
+    public LocalDateTime getLastBillReminderSentAt() {
+        return lastBillReminderSentAt;
+    }
+
+    public void setLastBillReminderSentAt(LocalDateTime lastBillReminderSentAt) {
+        this.lastBillReminderSentAt = lastBillReminderSentAt;
     }
 
     public enum AuthProvider {

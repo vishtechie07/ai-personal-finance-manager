@@ -6,6 +6,7 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -17,7 +18,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Simple in-memory rate limit for auth and AI endpoints (per client IP).
+ * In-memory rate limit for auth, AI, import, and account mutation endpoints (per client IP).
  */
 @Component
 public class RateLimitFilter extends OncePerRequestFilter {
@@ -31,19 +32,19 @@ public class RateLimitFilter extends OncePerRequestFilter {
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
-        String path = request.getServletPath();
-        if (!"POST".equalsIgnoreCase(request.getMethod())) {
-            return true;
-        }
-        return !(path.startsWith("/auth/") || path.startsWith("/ai/"));
+        return limitsFor(request) == null;
     }
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
-        String path = request.getServletPath();
-        String key = ClientIpResolver.resolve(request) + ":" + path;
-        if (!allow(key, maxForPath(path), windowMsForPath(path))) {
+        RateLimitSpec spec = limitsFor(request);
+        if (spec == null) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+        String key = ClientIpResolver.resolve(request) + ":" + request.getMethod() + ":" + request.getServletPath();
+        if (!allow(key, spec.max(), spec.windowMs())) {
             response.setStatus(HttpStatus.TOO_MANY_REQUESTS.value());
             response.setContentType("application/json");
             response.getWriter().write("{\"error\":\"Too many requests. Please try again later.\"}");
@@ -52,18 +53,38 @@ public class RateLimitFilter extends OncePerRequestFilter {
         filterChain.doFilter(request, response);
     }
 
-    private int maxForPath(String path) {
-        if ("/auth/register".equals(path)) {
-            return authProperties.getRegisterAttemptsPerWindow();
-        }
-        return authProperties.getRateLimitPerWindow();
-    }
+    private RateLimitSpec limitsFor(HttpServletRequest request) {
+        String method = request.getMethod();
+        String path = request.getServletPath();
 
-    private long windowMsForPath(String path) {
-        if ("/auth/register".equals(path)) {
-            return authProperties.getRegisterAttemptWindowSeconds() * 1000L;
+        if (HttpMethod.POST.matches(method) && path.startsWith("/auth/")) {
+            if ("/auth/register".equals(path)) {
+                return new RateLimitSpec(
+                        authProperties.getRegisterAttemptsPerWindow(),
+                        authProperties.getRegisterAttemptWindowSeconds() * 1000L);
+            }
+            return new RateLimitSpec(
+                    authProperties.getRateLimitPerWindow(),
+                    authProperties.getRateLimitWindowSeconds() * 1000L);
         }
-        return authProperties.getRateLimitWindowSeconds() * 1000L;
+        if (HttpMethod.POST.matches(method) && path.startsWith("/ai/")) {
+            return new RateLimitSpec(
+                    authProperties.getRateLimitPerWindow(),
+                    authProperties.getRateLimitWindowSeconds() * 1000L);
+        }
+        if (HttpMethod.POST.matches(method) && "/transactions/import".equals(path)) {
+            return new RateLimitSpec(5, 3_600_000L);
+        }
+        if (HttpMethod.POST.matches(method) && "/auth/me/change-password".equals(path)) {
+            return new RateLimitSpec(5, 3_600_000L);
+        }
+        if (HttpMethod.DELETE.matches(method) && "/auth/me".equals(path)) {
+            return new RateLimitSpec(3, 3_600_000L);
+        }
+        if (HttpMethod.POST.matches(method) && path.startsWith("/category-rules")) {
+            return new RateLimitSpec(20, authProperties.getRateLimitWindowSeconds() * 1000L);
+        }
+        return null;
     }
 
     private boolean allow(String key, int max, long windowMs) {
@@ -80,4 +101,6 @@ public class RateLimitFilter extends OncePerRequestFilter {
             return true;
         }
     }
+
+    private record RateLimitSpec(int max, long windowMs) {}
 }

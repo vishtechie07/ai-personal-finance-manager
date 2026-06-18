@@ -2,8 +2,11 @@ package com.finance.manager.controller;
 
 import com.finance.manager.model.Transaction;
 import com.finance.manager.security.AuthPrincipal;
+import com.finance.manager.service.CsvTransactionService;
 import com.finance.manager.service.TransactionService;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -11,15 +14,38 @@ import org.springframework.web.bind.annotation.*;
 import java.time.LocalDateTime;
 import java.time.YearMonth;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/transactions")
 public class TransactionController {
 
     private final TransactionService transactionService;
+    private final CsvTransactionService csvTransactionService;
 
-    public TransactionController(TransactionService transactionService) {
+    public TransactionController(
+            TransactionService transactionService,
+            CsvTransactionService csvTransactionService) {
         this.transactionService = transactionService;
+        this.csvTransactionService = csvTransactionService;
+    }
+
+    @GetMapping("/export")
+    public ResponseEntity<String> exportCsv(@AuthenticationPrincipal AuthPrincipal principal) {
+        String csv = csvTransactionService.exportCsv(principal.userId());
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"transactions.csv\"")
+                .contentType(MediaType.parseMediaType("text/csv"))
+                .body(csv);
+    }
+
+    @PostMapping("/import")
+    public ResponseEntity<Map<String, Object>> importCsv(
+            @AuthenticationPrincipal AuthPrincipal principal,
+            @RequestBody Map<String, String> body) {
+        String content = body != null ? body.get("csv") : null;
+        int imported = csvTransactionService.importCsv(principal.userId(), content);
+        return ResponseEntity.ok(Map.of("imported", imported));
     }
 
     @PostMapping

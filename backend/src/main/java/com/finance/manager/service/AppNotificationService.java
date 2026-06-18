@@ -1,5 +1,6 @@
 package com.finance.manager.service;
 
+import com.finance.manager.dto.NotificationView;
 import com.finance.manager.model.AppNotification;
 
 import java.util.List;
@@ -7,6 +8,8 @@ import java.util.List;
 public interface AppNotificationService {
 
     List<AppNotification> list(Long userId);
+
+    List<NotificationView> listViews(Long userId);
 
     long unreadCount(Long userId);
 
