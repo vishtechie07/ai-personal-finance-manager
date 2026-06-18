@@ -10,6 +10,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -44,7 +45,7 @@ class AiGateServiceTest {
     void platformTrialActiveWithinWindow() {
         User user = new User();
         user.setId(1L);
-        user.setCreatedAt(LocalDateTime.now().minusMinutes(2));
+        user.setCreatedAt(LocalDateTime.now(ZoneOffset.UTC).minusMinutes(2));
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
         when(openAiKeyResolver.isPlatformKeyConfigured()).thenReturn(true);
 
@@ -52,6 +53,9 @@ class AiGateServiceTest {
 
         assertTrue(status.trialActive());
         assertFalse(status.trialExpired());
+        assertNotNull(status.trialEndsAt());
+        assertTrue(status.trialEndsAt().endsWith("Z"));
+        assertTrue(status.trialSecondsRemaining() > 0);
         assertTrue(aiGateService.isAiAvailableForUser(1L, false));
     }
 
@@ -59,7 +63,7 @@ class AiGateServiceTest {
     void platformTrialExpiredAfterWindow() {
         User user = new User();
         user.setId(1L);
-        user.setCreatedAt(LocalDateTime.now().minusMinutes(10));
+        user.setCreatedAt(LocalDateTime.now(ZoneOffset.UTC).minusMinutes(10));
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
         when(openAiKeyResolver.isPlatformKeyConfigured()).thenReturn(true);
         when(openAiKeyResolver.resolveForUser(1L))

@@ -50,6 +50,7 @@ public class SettingsController {
         body.put("platformTrialActive", trial.trialActive());
         body.put("platformTrialExpired", trial.trialExpired());
         body.put("platformTrialEndsAt", trial.trialEndsAt());
+        body.put("platformTrialSecondsRemaining", trial.trialSecondsRemaining());
         userRepository.findById(principal.userId())
                 .ifPresent(user -> body.put("profile", userAccountService.toUserInfo(user)));
         return ResponseEntity.ok(body);

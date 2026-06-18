@@ -1,4 +1,4 @@
-import { ref, computed, onUnmounted } from "vue";
+import { ref, computed } from "vue";
 import axios from "axios";
 import { trialSecondsRemaining } from "../utils/aiSourceMessage";
 
@@ -9,22 +9,31 @@ const platformTrialActive = ref(false);
 const platformTrialExpired = ref(false);
 const platformTrialMinutes = ref(0);
 const platformTrialEndsAt = ref(null);
+const serverTrialSeconds = ref(null);
+const trialSyncedAt = ref(0);
 const loaded = ref(false);
 const tick = ref(0);
 
 let loadPromise = null;
 let tickInterval = null;
 
-function ensureTickInterval() {
+function ensureTickInterval(refreshFn) {
   if (tickInterval) return;
   tickInterval = setInterval(() => {
     tick.value += 1;
-    if (
-      platformTrialActive.value &&
-      trialSecondsRemaining(platformTrialEndsAt.value) === 0
-    ) {
-      platformTrialActive.value = false;
-      platformTrialExpired.value = true;
+    if (!platformTrialActive.value) return;
+    const left = trialSecondsRemaining(
+      platformTrialEndsAt.value,
+      serverTrialSeconds.value != null
+        ? Math.max(
+            0,
+            serverTrialSeconds.value -
+              Math.floor((Date.now() - trialSyncedAt.value) / 1000),
+          )
+        : null,
+    );
+    if (left === 0) {
+      refreshFn();
     }
   }, 1000);
 }
@@ -40,11 +49,21 @@ export function useAiStatus() {
   const secondsRemaining = computed(() => {
     tick.value;
     if (!platformTrialActive.value) return null;
+    if (serverTrialSeconds.value != null) {
+      return Math.max(
+        0,
+        serverTrialSeconds.value -
+          Math.floor((Date.now() - trialSyncedAt.value) / 1000),
+      );
+    }
     return trialSecondsRemaining(platformTrialEndsAt.value);
   });
 
   const aiAvailable = computed(
-    () => hasOpenAiApiKey.value || platformTrialActive.value || (platformAiEnabled.value && !platformTrialConfigured.value),
+    () =>
+      hasOpenAiApiKey.value ||
+      platformTrialActive.value ||
+      (platformAiEnabled.value && !platformTrialConfigured.value),
   );
 
   const label = computed(() => {
@@ -86,9 +105,13 @@ export function useAiStatus() {
     platformTrialExpired.value = !!data?.platformTrialExpired;
     platformTrialMinutes.value = Number(data?.platformTrialMinutes) || 0;
     platformTrialEndsAt.value = data?.platformTrialEndsAt || null;
+    const secs = data?.platformTrialSecondsRemaining;
+    serverTrialSeconds.value =
+      secs != null && secs !== "" ? Number(secs) : null;
+    trialSyncedAt.value = Date.now();
     loaded.value = true;
     if (platformTrialActive.value) {
-      ensureTickInterval();
+      ensureTickInterval(refresh);
     } else {
       clearTickInterval();
     }
@@ -117,13 +140,11 @@ export function useAiStatus() {
     platformTrialExpired.value = false;
     platformTrialMinutes.value = 0;
     platformTrialEndsAt.value = null;
+    serverTrialSeconds.value = null;
+    trialSyncedAt.value = 0;
     loaded.value = false;
     clearTickInterval();
   }
-
-  onUnmounted(() => {
-    /* shared singleton — interval cleared on reset */
-  });
 
   return {
     label,

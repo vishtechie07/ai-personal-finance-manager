@@ -6,8 +6,10 @@ import com.finance.manager.repository.UserRepository;
 import com.finance.manager.service.OpenAiKeyResolver.ResolvedKey;
 import org.springframework.stereotype.Service;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
+import java.time.ZoneOffset;
 import java.util.Optional;
 
 /**
@@ -16,7 +18,8 @@ import java.util.Optional;
 @Service
 public class AiGateService {
 
-    private static final DateTimeFormatter ISO_LOCAL = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
+    /** Render and Postgres store naive timestamps as UTC wall clock. */
+    private static final ZoneOffset SERVER_ZONE = ZoneOffset.UTC;
 
     public enum Operation {
         CATEGORY,
@@ -36,7 +39,8 @@ public class AiGateService {
             boolean trialConfigured,
             boolean trialActive,
             boolean trialExpired,
-            String trialEndsAt) {}
+            String trialEndsAt,
+            long trialSecondsRemaining) {}
 
     private final AiProperties aiProperties;
     private final OpenAiKeyResolver openAiKeyResolver;
@@ -62,18 +66,20 @@ public class AiGateService {
         int trialMinutes = aiProperties.getPlatformTrialMinutes();
         boolean trialConfigured = trialMinutes > 0 && isPlatformAiConfigured();
         if (!trialConfigured || hasUserApiKey) {
-            return new PlatformTrialStatus(trialMinutes, trialConfigured, false, false, null);
+            return new PlatformTrialStatus(trialMinutes, trialConfigured, false, false, null, 0);
         }
         User user = userRepository.findById(userId).orElse(null);
         if (user == null || user.getCreatedAt() == null) {
-            return new PlatformTrialStatus(trialMinutes, trialConfigured, false, false, null);
+            return new PlatformTrialStatus(trialMinutes, trialConfigured, false, false, null, 0);
         }
-        LocalDateTime trialEnd = user.getCreatedAt().plusMinutes(trialMinutes);
-        LocalDateTime now = LocalDateTime.now();
+        Instant trialEnd = trialEndInstant(user.getCreatedAt(), trialMinutes);
+        Instant now = Instant.now();
         boolean active = !now.isAfter(trialEnd);
         boolean expired = now.isAfter(trialEnd);
-        String endsAt = trialEnd.format(ISO_LOCAL);
-        return new PlatformTrialStatus(trialMinutes, trialConfigured, active, expired, endsAt);
+        long secondsRemaining = active ? Math.max(0, Duration.between(now, trialEnd).getSeconds()) : 0;
+        String endsAt = trialEnd.toString();
+        return new PlatformTrialStatus(
+                trialMinutes, trialConfigured, active, expired, endsAt, secondsRemaining);
     }
 
     public boolean isAiAvailableForUser(Long userId, boolean hasUserApiKey) {
@@ -162,13 +168,17 @@ public class AiGateService {
         if (trialMinutes > 0) {
             User user = userRepository.findById(userId).orElse(null);
             if (user != null && user.getCreatedAt() != null) {
-                LocalDateTime trialEnd = user.getCreatedAt().plusMinutes(trialMinutes);
-                if (LocalDateTime.now().isAfter(trialEnd)) {
+                Instant trialEnd = trialEndInstant(user.getCreatedAt(), trialMinutes);
+                if (Instant.now().isAfter(trialEnd)) {
                     return Optional.of("platform_trial_expired");
                 }
             }
         }
         return Optional.empty();
+    }
+
+    private Instant trialEndInstant(LocalDateTime createdAt, int trialMinutes) {
+        return createdAt.atZone(SERVER_ZONE).toInstant().plusSeconds(trialMinutes * 60L);
     }
 
     private String quotaKey(Long userId, Operation operation, boolean platform) {

@@ -27,12 +27,19 @@ export function formatTrialCountdown(secondsRemaining) {
 
 export function parseTrialEndsAt(endsAt) {
   if (!endsAt) return null;
-  const normalized = endsAt.includes("T") ? endsAt : endsAt.replace(" ", "T");
+  let normalized = endsAt.includes("T") ? endsAt : endsAt.replace(" ", "T");
+  // Server timestamps are UTC; naive values without offset must not be parsed as local time.
+  if (!/(?:[zZ]|[+-]\d{2}:?\d{2})$/.test(normalized)) {
+    normalized += "Z";
+  }
   const ms = Date.parse(normalized);
   return Number.isNaN(ms) ? null : ms;
 }
 
-export function trialSecondsRemaining(endsAt) {
+export function trialSecondsRemaining(endsAt, serverSeconds = null) {
+  if (serverSeconds != null && serverSeconds >= 0) {
+    return serverSeconds;
+  }
   const endMs = parseTrialEndsAt(endsAt);
   if (endMs == null) return null;
   return Math.max(0, Math.ceil((endMs - Date.now()) / 1000));
