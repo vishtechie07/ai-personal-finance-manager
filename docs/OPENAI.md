@@ -6,6 +6,8 @@
 2. **Platform key** (`OPENAI_API_KEY` + `APP_PLATFORM_AI_ENABLED=true`) — optional hosted trials.
 3. **Neither** — AI endpoints return `no_api_key`; the frontend uses keyword-based category fallback.
 
+When platform AI is on, new users without their own key get a **time-limited trial** (`APP_PLATFORM_AI_TRIAL_MINUTES`, default **5** on Render). After it expires, they must add a key in Settings.
+
 The platform key is **never** exposed to the browser or returned in API responses.
 
 ## Platform AI safety (production defaults)
@@ -15,14 +17,15 @@ On Render (`application-render.yml` / `render.yaml`):
 | Control | Default | Env var |
 |---------|---------|---------|
 | Platform AI off | `false` | `APP_PLATFORM_AI_ENABLED` |
-| New account wait | 24 hours | `APP_PLATFORM_AI_MIN_ACCOUNT_AGE_HOURS` |
+| Platform AI trial | 5 min (Render) | `APP_PLATFORM_AI_TRIAL_MINUTES` (`0` = no time limit) |
+| New account wait | 0 hours (Render) | `APP_PLATFORM_AI_MIN_ACCOUNT_AGE_HOURS` |
 | Trial user blocked | on | (code: `spendsense` cannot use platform AI) |
 | Category quota / hour | 25 (platform), 60 (user key) | `APP_AI_PLATFORM_CATEGORY_QUOTA`, `APP_AI_USER_CATEGORY_QUOTA` |
 | Receipt quota / hour | 5 (platform), 15 (user key) | `APP_AI_PLATFORM_RECEIPT_QUOTA`, `APP_AI_USER_RECEIPT_QUOTA` |
 | Monthly brief quota / hour | 6 (platform), 12 (user key) | `APP_AI_PLATFORM_MONTHLY_BRIEF_QUOTA`, `APP_AI_USER_MONTHLY_BRIEF_QUOTA` |
 | Max description length | 200 chars | `APP_AI_MAX_DESCRIPTION_LENGTH` |
 
-Denied responses use `source` values: `rate_limited`, `platform_disabled`, `demo_not_allowed`, `account_too_new`, `no_api_key`.
+Denied responses use `source` values: `rate_limited`, `platform_disabled`, `demo_not_allowed`, `account_too_new`, `platform_trial_expired`, `no_api_key`.
 
 **Recommended for public Render:** leave `APP_PLATFORM_AI_ENABLED=false` and omit `OPENAI_API_KEY`, or only enable platform AI for short controlled demos with OpenAI budget alerts.
 
@@ -42,6 +45,8 @@ Denied responses use `source` values: `rate_limited`, `platform_disabled`, `demo
 | `OPENAI_API_KEY` | Platform secret key (Render secret) |
 | `OPENAI_MODEL` | Model id, default `gpt-4o-mini` |
 | `APP_PLATFORM_AI_ENABLED` | Allow platform key fallback |
+| `APP_PLATFORM_AI_TRIAL_MINUTES` | Minutes of hosted AI after signup without user key (`0` = unlimited) |
+| `APP_PLATFORM_AI_MIN_ACCOUNT_AGE_HOURS` | Block platform AI until account is this old (use `0` with trial) |
 | `SETTINGS_ENCRYPTION_KEY` | Encrypts per-user API keys at rest |
 
 ## Local development

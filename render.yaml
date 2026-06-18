@@ -50,5 +50,9 @@ services:
         value: "false"
       - key: APP_PLATFORM_AI_ENABLED
         value: "false"
+      - key: APP_PLATFORM_AI_MIN_ACCOUNT_AGE_HOURS
+        value: "0"
+      - key: APP_PLATFORM_AI_TRIAL_MINUTES
+        value: "5"
       - key: APP_MAX_NEW_ACCOUNTS_PER_IP_PER_DAY
         value: "5"

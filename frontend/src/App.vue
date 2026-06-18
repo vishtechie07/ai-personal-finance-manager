@@ -146,6 +146,7 @@
     >
       <div class="max-w-7xl mx-auto">
         <SampleDataBanner v-if="isAuthenticated" />
+        <AiTrialBanner v-if="isAuthenticated" />
         <router-view />
       </div>
     </main>
@@ -267,6 +268,7 @@
         </div>
       </div>
     </div>
+    <QuickAddFab v-if="isAuthenticated" @add="openQuickAdd" />
   </div>
 </template>
 
@@ -282,7 +284,10 @@ import NotificationBell from "./components/NotificationBell.vue";
 import GoogleSignInButton from "./components/GoogleSignInButton.vue";
 import AppBootOverlay from "./components/AppBootOverlay.vue";
 import SampleDataBanner from "./components/SampleDataBanner.vue";
+import AiTrialBanner from "./components/AiTrialBanner.vue";
+import QuickAddFab from "./components/QuickAddFab.vue";
 import { usePublicConfig } from "./composables/usePublicConfig";
+import { useNotificationsStore } from "./stores/notifications";
 import { warmupServer } from "./composables/authTimeout";
 
 const authStore = useAuthStore();
@@ -295,6 +300,7 @@ const loginError = ref(null);
 const toast = useToast();
 const { config: publicConfig, load: loadPublicConfig } = usePublicConfig();
 const aiStatus = useAiStatus();
+const notificationsStore = useNotificationsStore();
 
 const navLinks = [
   { to: "/dashboard", label: "Dashboard" },
@@ -380,15 +386,21 @@ const handleLogout = () => {
   aiStatus.reset();
   authStore.logout();
   showUserMenu.value = false;
-  router.push("/"); // Navigate to home page after logout
+  router.push("/");
+};
+
+const openQuickAdd = () => {
+  router.push({ path: "/transactions", query: { add: "1" } });
 };
 
 // Check if user is already authenticated on app start
 watch(
   () => authStore.isAuthenticated,
   (authed) => {
-    if (authed) aiStatus.refresh();
-    else aiStatus.reset();
+    if (authed) {
+      aiStatus.refresh();
+      notificationsStore.sync();
+    } else aiStatus.reset();
   },
   { immediate: true },
 );

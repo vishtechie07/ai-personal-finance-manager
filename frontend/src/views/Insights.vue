@@ -355,6 +355,7 @@ import axios from "axios";
 import { useTransactionsStore } from "../stores/transactions";
 import { useBudgetsStore } from "../stores/budgets";
 import { getApiErrorMessage } from "../utils/apiError";
+import { aiSourceMessage } from "../utils/aiSourceMessage";
 import { useToast } from "../composables/useToast";
 
 export default {
@@ -413,6 +414,7 @@ export default {
       const s = briefSource.value;
       if (s === "openai" || s === "openai_platform") return "SpendSense AI";
       if (s === "no_api_key") return "No API key — summary only";
+      if (s === "platform_trial_expired") return "Trial ended — add your key";
       if (s === "rate_limited") return "Rate limited";
       return s || "—";
     });
@@ -428,8 +430,9 @@ export default {
         briefSource.value = data?.source || "";
         if (data?.source?.startsWith("openai")) {
           toast.success("Monthly brief generated");
-        } else if (data?.source === "no_api_key") {
-          toast.error("Add an OpenAI key in Settings to generate an AI brief.");
+        } else {
+          const msg = aiSourceMessage(data?.source);
+          if (msg) toast.error(msg);
         }
       } catch (e) {
         toast.error(getApiErrorMessage(e));

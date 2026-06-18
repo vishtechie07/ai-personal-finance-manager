@@ -7,6 +7,7 @@ import com.finance.manager.service.OpenAiKeyResolver.ResolvedKey;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Optional;
 
 /**
@@ -14,6 +15,8 @@ import java.util.Optional;
  */
 @Service
 public class AiGateService {
+
+    private static final DateTimeFormatter ISO_LOCAL = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
 
     public enum Operation {
         CATEGORY,
@@ -27,6 +30,13 @@ public class AiGateService {
 
         record Denied(String source) implements AccessResult {}
     }
+
+    public record PlatformTrialStatus(
+            int trialMinutes,
+            boolean trialConfigured,
+            boolean trialActive,
+            boolean trialExpired,
+            String trialEndsAt) {}
 
     private final AiProperties aiProperties;
     private final OpenAiKeyResolver openAiKeyResolver;
@@ -46,6 +56,38 @@ public class AiGateService {
 
     public boolean isPlatformAiConfigured() {
         return openAiKeyResolver.isPlatformKeyConfigured() && aiProperties.isPlatformEnabled();
+    }
+
+    public PlatformTrialStatus getPlatformTrialStatus(Long userId, boolean hasUserApiKey) {
+        int trialMinutes = aiProperties.getPlatformTrialMinutes();
+        boolean trialConfigured = trialMinutes > 0 && isPlatformAiConfigured();
+        if (!trialConfigured || hasUserApiKey) {
+            return new PlatformTrialStatus(trialMinutes, trialConfigured, false, false, null);
+        }
+        User user = userRepository.findById(userId).orElse(null);
+        if (user == null || user.getCreatedAt() == null) {
+            return new PlatformTrialStatus(trialMinutes, trialConfigured, false, false, null);
+        }
+        LocalDateTime trialEnd = user.getCreatedAt().plusMinutes(trialMinutes);
+        LocalDateTime now = LocalDateTime.now();
+        boolean active = !now.isAfter(trialEnd);
+        boolean expired = now.isAfter(trialEnd);
+        String endsAt = trialEnd.format(ISO_LOCAL);
+        return new PlatformTrialStatus(trialMinutes, trialConfigured, active, expired, endsAt);
+    }
+
+    public boolean isAiAvailableForUser(Long userId, boolean hasUserApiKey) {
+        if (hasUserApiKey) {
+            return true;
+        }
+        if (!isPlatformAiConfigured()) {
+            return false;
+        }
+        PlatformTrialStatus trial = getPlatformTrialStatus(userId, false);
+        if (trial.trialConfigured()) {
+            return trial.trialActive();
+        }
+        return true;
     }
 
     public Optional<String> truncateDescription(String description) {
@@ -113,6 +155,16 @@ public class AiGateService {
                 LocalDateTime eligible = user.getCreatedAt().plusHours(minHours);
                 if (LocalDateTime.now().isBefore(eligible)) {
                     return Optional.of("account_too_new");
+                }
+            }
+        }
+        int trialMinutes = aiProperties.getPlatformTrialMinutes();
+        if (trialMinutes > 0) {
+            User user = userRepository.findById(userId).orElse(null);
+            if (user != null && user.getCreatedAt() != null) {
+                LocalDateTime trialEnd = user.getCreatedAt().plusMinutes(trialMinutes);
+                if (LocalDateTime.now().isAfter(trialEnd)) {
+                    return Optional.of("platform_trial_expired");
                 }
             }
         }

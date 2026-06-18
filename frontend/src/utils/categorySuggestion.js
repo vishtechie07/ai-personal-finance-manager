@@ -254,6 +254,7 @@ export async function resolveCategory(description, keywordMap) {
       "platform_disabled",
       "demo_not_allowed",
       "account_too_new",
+      "platform_trial_expired",
       "no_api_key",
     ];
     if (limited.includes(data?.source)) {

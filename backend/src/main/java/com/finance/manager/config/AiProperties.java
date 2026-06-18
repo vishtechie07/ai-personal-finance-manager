@@ -8,8 +8,13 @@ public class AiProperties {
     /** When false, platform OPENAI_API_KEY is never used (user keys still work). */
     private boolean platformEnabled = false;
 
-    /** Minimum account age before platform AI is allowed (hours). */
+    /** Minimum account age before platform AI is allowed (hours). Use 0 with platform trial. */
     private int platformMinAccountAgeHours = 24;
+
+    /**
+     * Platform AI only for this many minutes after signup (no user key). 0 = no time limit.
+     */
+    private int platformTrialMinutes = 0;
 
     /** Block seeded trial user from consuming platform AI. */
     private boolean blockDemoUserPlatformAi = true;
@@ -40,6 +45,14 @@ public class AiProperties {
 
     public void setPlatformMinAccountAgeHours(int platformMinAccountAgeHours) {
         this.platformMinAccountAgeHours = Math.max(0, platformMinAccountAgeHours);
+    }
+
+    public int getPlatformTrialMinutes() {
+        return platformTrialMinutes;
+    }
+
+    public void setPlatformTrialMinutes(int platformTrialMinutes) {
+        this.platformTrialMinutes = Math.max(0, platformTrialMinutes);
     }
 
     public boolean isBlockDemoUserPlatformAi() {
