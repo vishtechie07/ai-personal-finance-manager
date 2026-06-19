@@ -85,6 +85,7 @@ class AiGateServiceTest {
     void userKeyBypassesTrialExpiry() {
         assertTrue(aiGateService.isAiAvailableForUser(1L, true));
         AiGateService.PlatformTrialStatus status = aiGateService.getPlatformTrialStatus(1L, true);
+        assertFalse(status.trialConfigured());
         assertFalse(status.trialActive());
         assertFalse(status.trialExpired());
     }

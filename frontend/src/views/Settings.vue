@@ -277,7 +277,7 @@ async function load() {
       billReminderDaysBefore: p.billReminderDaysBefore ?? 3,
     };
     rules.value = rulesRes.data || [];
-    await aiStatus.refresh();
+    aiStatus.applySettings(settingsRes.data);
   } catch (e) {
     error.value = getApiErrorMessage(e);
   } finally {
@@ -335,11 +335,13 @@ async function savePreferences() {
 async function saveKey() {
   saving.value = true;
   try {
-    await axios.put("/settings/openai-api-key", { apiKey: apiKeyInput.value.trim() });
+    const { data } = await axios.put("/settings/openai-api-key", {
+      apiKey: apiKeyInput.value.trim(),
+    });
     hasOpenAiApiKey.value = true;
     apiKeyInput.value = "";
     message.value = "API key saved.";
-    await aiStatus.refresh();
+    aiStatus.applySettings(data);
   } catch (e) {
     error.value = getApiErrorMessage(e);
   } finally {
@@ -351,10 +353,10 @@ async function removeKey() {
   if (!confirm("Remove your saved OpenAI API key?")) return;
   saving.value = true;
   try {
-    await axios.delete("/settings/openai-api-key");
+    const { data } = await axios.delete("/settings/openai-api-key");
     hasOpenAiApiKey.value = false;
     message.value = "API key removed.";
-    await aiStatus.refresh();
+    aiStatus.applySettings(data);
   } catch (e) {
     error.value = getApiErrorMessage(e);
   } finally {

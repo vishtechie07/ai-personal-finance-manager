@@ -37,23 +37,26 @@ public class SettingsController {
 
     @GetMapping
     public ResponseEntity<Map<String, Object>> getSettings(@AuthenticationPrincipal AuthPrincipal principal) {
-        boolean hasKey = userOpenAiSettingsService.hasApiKey(principal.userId());
-        AiGateService.PlatformTrialStatus trial =
-                aiGateService.getPlatformTrialStatus(principal.userId(), hasKey);
+        return ResponseEntity.ok(buildSettingsBody(principal.userId()));
+    }
+
+    private Map<String, Object> buildSettingsBody(Long userId) {
+        boolean hasKey = userOpenAiSettingsService.hasApiKey(userId);
+        AiGateService.PlatformTrialStatus trial = aiGateService.getPlatformTrialStatus(userId, hasKey);
 
         Map<String, Object> body = new HashMap<>();
         body.put("hasOpenAiApiKey", hasKey);
         body.put("platformAiEnabled", aiGateService.isPlatformAiConfigured());
-        body.put("aiAvailable", aiGateService.isAiAvailableForUser(principal.userId(), hasKey));
+        body.put("aiAvailable", aiGateService.isAiAvailableForUser(userId, hasKey));
         body.put("platformTrialMinutes", trial.trialMinutes());
         body.put("platformTrialConfigured", trial.trialConfigured());
         body.put("platformTrialActive", trial.trialActive());
         body.put("platformTrialExpired", trial.trialExpired());
         body.put("platformTrialEndsAt", trial.trialEndsAt());
         body.put("platformTrialSecondsRemaining", trial.trialSecondsRemaining());
-        userRepository.findById(principal.userId())
+        userRepository.findById(userId)
                 .ifPresent(user -> body.put("profile", userAccountService.toUserInfo(user)));
-        return ResponseEntity.ok(body);
+        return body;
     }
 
     @PutMapping("/preferences")
@@ -72,13 +75,13 @@ public class SettingsController {
             @AuthenticationPrincipal AuthPrincipal principal,
             @RequestBody @jakarta.validation.Valid OpenAiKeyRequest request) {
         userOpenAiSettingsService.saveApiKey(principal.userId(), request.apiKey());
-        return ResponseEntity.ok(Map.of("hasOpenAiApiKey", true));
+        return ResponseEntity.ok(buildSettingsBody(principal.userId()));
     }
 
     @DeleteMapping("/openai-api-key")
     public ResponseEntity<Map<String, Object>> deleteOpenAiApiKey(@AuthenticationPrincipal AuthPrincipal principal) {
         userOpenAiSettingsService.clearApiKey(principal.userId());
-        return ResponseEntity.ok(Map.of("hasOpenAiApiKey", false));
+        return ResponseEntity.ok(buildSettingsBody(principal.userId()));
     }
 
     public record OpenAiKeyRequest(

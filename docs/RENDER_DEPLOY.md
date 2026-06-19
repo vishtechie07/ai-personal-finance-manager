@@ -106,8 +106,11 @@ Receipt files are stored on disk at `APP_STORAGE_PATH` (default `/app/uploads`).
 
 | Symptom | Fix |
 |--------|-----|
+| `password authentication failed for user "…"` | Postgres password was rotated but the **web service** still has the old value. On **pfm-db** → **Connections** → **Internal**, copy the current password. On the **web service** → **Environment**, update `DATABASE_PASSWORD` (or **Remove** + **Add from database** → link **pfm-db** to refresh all `DATABASE_*` vars). **Save** and redeploy. Do not use the **External** URL for the app. |
+| `No open ports detected` / `Exited with status 1` after DB error | The app never started because Flyway could not connect. Fix the database password first; port 80 will open once Spring Boot is healthy. |
+| `Spring Boot did not become healthy` within 300s | Same as DB auth failure or very slow cold start. Check logs for `FlywaySqlException` or `password authentication failed` first. |
 | 502 / blank after deploy | Check logs; ensure port **80** and health path `/api/actuator/health` |
-| DB connection errors | Use **Internal** host (not External URL); verify `SPRING_PROFILES_ACTIVE=render` |
+| DB connection errors | Use **Internal** host (not External URL); verify `SPRING_PROFILES_ACTIVE=render` and `DATABASE_USERNAME` matches Internal tab (e.g. `spendsense_db_user`, not the admin user from External) |
 | CORS errors from browser | Set `CORS_ALLOWED_ORIGIN_PATTERNS` to your exact Render URL or `https://*.onrender.com` |
 | Login works locally but not on Render | Confirm `JWT_SECRET` is set and unchanged between deploys |
 | Cold start timeout on free tier | Wait up to 60 s on first request after idle; upgrade instance to avoid sleep. Auth signup/login use a **90 s** client timeout and show a waking-up message. |

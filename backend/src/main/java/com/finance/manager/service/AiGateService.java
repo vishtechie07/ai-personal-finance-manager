@@ -66,7 +66,8 @@ public class AiGateService {
         int trialMinutes = aiProperties.getPlatformTrialMinutes();
         boolean trialConfigured = trialMinutes > 0 && isPlatformAiConfigured();
         if (!trialConfigured || hasUserApiKey) {
-            return new PlatformTrialStatus(trialMinutes, trialConfigured, false, false, null, 0);
+            return new PlatformTrialStatus(
+                    trialMinutes, hasUserApiKey ? false : trialConfigured, false, false, null, 0);
         }
         User user = userRepository.findById(userId).orElse(null);
         if (user == null || user.getCreatedAt() == null) {

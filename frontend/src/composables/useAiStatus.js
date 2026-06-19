@@ -89,13 +89,11 @@ export function useAiStatus() {
     return "bg-amber-50 text-amber-800";
   });
 
-  const showTrialBanner = computed(
-    () =>
-      loaded.value &&
-      !hasOpenAiApiKey.value &&
-      platformTrialConfigured.value &&
-      (platformTrialActive.value || platformTrialExpired.value),
-  );
+  const showTrialBanner = computed(() => {
+    if (!loaded.value || hasOpenAiApiKey.value) return false;
+    if (!platformTrialConfigured.value) return false;
+    return platformTrialActive.value || platformTrialExpired.value;
+  });
 
   function applySettings(data) {
     hasOpenAiApiKey.value = !!data?.hasOpenAiApiKey;
@@ -117,7 +115,18 @@ export function useAiStatus() {
     }
   }
 
-  async function refresh() {
+  async function refresh(options = {}) {
+    const force = options.force === true;
+    if (force) {
+      if (loadPromise) {
+        try {
+          await loadPromise;
+        } catch {
+          /* ignore */
+        }
+      }
+      loadPromise = null;
+    }
     if (!loadPromise) {
       loadPromise = axios
         .get("/settings")
