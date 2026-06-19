@@ -18,12 +18,18 @@
     </div>
 
     <div v-else class="overflow-x-auto -mx-2">
-      <table class="min-w-full text-sm">
+      <table class="min-w-full w-full table-fixed text-sm">
+        <colgroup>
+          <col class="w-[38%]" />
+          <col class="w-[26%]" />
+          <col class="w-[18%]" />
+          <col class="w-[18%]" />
+        </colgroup>
         <thead>
           <tr class="text-left text-xs uppercase tracking-wide text-slate-500 border-b border-slate-100">
-            <th class="px-2 py-2 font-medium">Description</th>
-            <th class="px-2 py-2 font-medium hidden sm:table-cell">Category</th>
-            <th class="px-2 py-2 font-medium hidden md:table-cell">Date</th>
+            <th class="px-2 py-2 font-medium text-left">Description</th>
+            <th class="px-2 py-2 font-medium text-left hidden sm:table-cell">Category</th>
+            <th class="px-2 py-2 font-medium text-left hidden md:table-cell">Date</th>
             <th class="px-2 py-2 font-medium text-right">Amount</th>
           </tr>
         </thead>
@@ -33,17 +39,19 @@
             :key="tx.id"
             class="hover:bg-slate-50/80 transition-colors"
           >
-            <td class="px-2 py-3 font-medium text-slate-900 max-w-[12rem] truncate">
+            <td class="px-2 py-3 font-medium text-slate-900 truncate align-middle">
               {{ tx.description }}
             </td>
-            <td class="px-2 py-3 hidden sm:table-cell">
-              <span class="category-pill">{{ formatCategoryLabel(tx.category) }}</span>
+            <td class="px-2 py-3 hidden sm:table-cell align-middle text-left">
+              <span class="category-pill max-w-full truncate">{{
+                formatCategoryLabel(tx.category)
+              }}</span>
             </td>
-            <td class="px-2 py-3 text-slate-500 hidden md:table-cell tabular-nums">
+            <td class="px-2 py-3 text-slate-500 hidden md:table-cell align-middle tabular-nums whitespace-nowrap">
               {{ formatDate(tx.transactionDate) }}
             </td>
             <td
-              class="px-2 py-3 text-right font-semibold tabular-nums"
+              class="px-2 py-3 text-right font-semibold tabular-nums align-middle whitespace-nowrap"
               :class="tx.type === 'EXPENSE' ? 'text-danger-600' : 'text-success-600'"
             >
               {{ tx.type === "EXPENSE" ? "−" : "+" }}{{ formatMoney(tx.amount) }}

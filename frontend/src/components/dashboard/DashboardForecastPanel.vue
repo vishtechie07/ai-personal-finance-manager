@@ -83,11 +83,13 @@
         <li
           v-for="bill in billTimeline"
           :key="bill.id"
-          class="flex items-center justify-between gap-3 text-sm"
+          class="grid grid-cols-[minmax(0,1fr)_4.5rem_5.5rem] items-center gap-x-3 text-sm"
         >
-          <span class="text-slate-800 truncate">{{ bill.payeeName }}</span>
-          <span class="shrink-0 text-slate-500">{{ formatDue(bill.due) }}</span>
-          <span class="shrink-0 tabular-nums font-medium">{{
+          <span class="text-slate-800 truncate min-w-0">{{ bill.payeeName }}</span>
+          <span class="text-slate-500 tabular-nums whitespace-nowrap text-right">{{
+            formatDue(bill.due)
+          }}</span>
+          <span class="tabular-nums font-medium text-right whitespace-nowrap">{{
             formatMoney(bill.amount)
           }}</span>
         </li>
